@@ -93,19 +93,18 @@ with st.container():
                 unsafe_allow_html=True,
             )
 
-    # Input at bottom
-    user_input = st.text_input("💭 Type your message:", key="input", placeholder="Ask me anything...")
+    # Input with single-click submit (form)
+    with st.form(key="chat_form", clear_on_submit=True):
+        user_input = st.text_input("💭 Type your message:", key="input", placeholder="Ask me anything...")
+        submit = st.form_submit_button("🚀 Send")
 
-    if st.button(" Submit ", use_container_width=True):
-        if user_input.strip():
+        if submit and user_input.strip():
             # Add user msg
             st.session_state.chat_history.append(("user", user_input))
 
             # Get bot reply
             response = get_gemini_response(user_input)
             st.session_state.chat_history.append(("bot", response))
-        else:
-            st.warning("⚠️ Please enter a question.")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
