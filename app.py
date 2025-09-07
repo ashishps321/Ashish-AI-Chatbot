@@ -55,6 +55,7 @@ with st.sidebar:
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
         st.session_state.chat_history = []
+        st.rerun()
 
     st.markdown("---")
     st.caption("Developed by Ashish")
@@ -104,6 +105,9 @@ with st.container():
             # Get bot reply
             response = get_gemini_response(user_input)
             st.session_state.chat_history.append(("bot", response))
+
+            # Refresh to display immediately
+            st.rerun()
         else:
             st.warning("⚠️ Please enter a question.")
 
