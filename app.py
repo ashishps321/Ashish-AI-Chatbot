@@ -4,7 +4,6 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# ------------------ API Setup ------------------
 # load .env for local development (no effect on Streamlit Cloud)
 load_dotenv()
 
@@ -16,7 +15,7 @@ else:
     API_KEY = os.getenv("GOOGLE_API_KEY")
 
 if not API_KEY:
-    st.error("❌ Google API key not found. Add it to Streamlit Secrets or .env file.")
+    st.error("Google API key not found. Add it to Streamlit Secrets (recommended) or put it in a local .env file for development.")
     st.stop()
 
 # Configure Gemini
@@ -24,11 +23,8 @@ genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 def get_gemini_response(question: str):
-    try:
-        response = model.generate_content(question)
-        return response.text
-    except Exception as e:
-        return f"⚠️ Error: {str(e)}"
+    response = model.generate_content(question)
+    return response.text
 
 # ------------------ Streamlit UI ------------------
 st.set_page_config(page_title="AI Chatbot by ASHISH", page_icon="🤖", layout="wide")
@@ -42,7 +38,10 @@ with st.sidebar:
     st.subheader("⚡ About")
     st.write(
         """
-        Welcome to **Ashish’s AI Chatbot** 🚀  
+        Welcome to **Ashish’s AI Chatbot**, your intelligent virtual assistant  
+        designed to provide instant, accurate, and engaging responses.  
+
+        **Key Highlights**  
         - 💡 Insightful Responses  
         - 🗣️ Natural Conversation  
         - 🎯 Personalized Interaction  
@@ -71,7 +70,7 @@ st.markdown('<div class="tagline">“Your AI companion for knowledge and convers
 with st.container():
     st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
-    # Display chat history (persists)
+    # Display chat history
     for role, msg in st.session_state.chat_history:
         if role == "user":
             st.markdown(
@@ -115,20 +114,23 @@ if theme == "Light":
     st.markdown(
         """
         <style>
-        body { background: linear-gradient(135deg, #f9f9f9 0%, #e3f2fd 100%); }
+        body { background: linear-gradient(135deg, #f9f9f9 0%, #e3f2fd 100%); font-family: 'Segoe UI', sans-serif; }
         .chat-container { max-width: 750px; margin: auto; padding: 20px; }
         .user-msg, .bot-msg {
             padding: 12px 16px; border-radius: 15px; margin: 10px 0;
             font-size: 16px; display: inline-block; max-width: 80%;
             backdrop-filter: blur(8px); box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease-in-out;
         }
+        .user-msg:hover, .bot-msg:hover { transform: scale(1.02); }
         .user-msg { background: rgba(72, 187, 120, 0.9); color: white; text-align: right; }
         .bot-msg { background: rgba(255, 255, 255, 0.7); color: #2c3e50; text-align: left; }
         .msg-row { display: flex; align-items: flex-start; margin-bottom: 10px; }
         .msg-row.user { justify-content: flex-end; }
-        .msg-avatar { width: 42px; height: 42px; border-radius: 50%; margin: 0 8px; }
-        .title { text-align: center; font-size: 34px; font-weight: bold; color: #0d47a1; }
-        .tagline { text-align: center; font-size: 16px; font-style: italic; color: #546e7a; }
+        .msg-avatar { width: 42px; height: 42px; border-radius: 50%; margin: 0 8px; border: 2px solid #ddd; }
+        .title { text-align: center; font-size: 34px; font-weight: bold; color: #0d47a1; margin-bottom: 5px;
+                 text-shadow: 1px 1px 2px rgba(0,0,0,0.15); }
+        .tagline { text-align: center; font-size: 16px; font-style: italic; color: #546e7a; margin-bottom: 25px; }
         </style>
         """,
         unsafe_allow_html=True,
@@ -138,20 +140,23 @@ elif theme == "Dark":
     st.markdown(
         """
         <style>
-        body { background: linear-gradient(135deg, #1e1e2f 0%, #121212 100%); color: white; }
+        body { background: linear-gradient(135deg, #1e1e2f 0%, #121212 100%); font-family: 'Segoe UI', sans-serif; color: white; }
         .chat-container { max-width: 750px; margin: auto; padding: 20px; }
         .user-msg, .bot-msg {
             padding: 12px 16px; border-radius: 15px; margin: 10px 0;
             font-size: 16px; display: inline-block; max-width: 80%;
             backdrop-filter: blur(8px); box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease-in-out;
         }
+        .user-msg:hover, .bot-msg:hover { transform: scale(1.02); }
         .user-msg { background: rgba(0, 200, 83, 0.9); color: white; text-align: right; }
         .bot-msg { background: rgba(33, 33, 33, 0.8); color: #f1f1f1; text-align: left; }
         .msg-row { display: flex; align-items: flex-start; margin-bottom: 10px; }
         .msg-row.user { justify-content: flex-end; }
-        .msg-avatar { width: 42px; height: 42px; border-radius: 50%; margin: 0 8px; }
-        .title { text-align: center; font-size: 34px; font-weight: bold; color: #00e5ff; }
-        .tagline { text-align: center; font-size: 16px; font-style: italic; color: #b0bec5; }
+        .msg-avatar { width: 42px; height: 42px; border-radius: 50%; margin: 0 8px; border: 2px solid #444; }
+        .title { text-align: center; font-size: 34px; font-weight: bold; color: #00e5ff; margin-bottom: 5px;
+                 text-shadow: 1px 1px 3px rgba(0,0,0,0.6); }
+        .tagline { text-align: center; font-size: 16px; font-style: italic; color: #b0bec5; margin-bottom: 25px; }
         </style>
         """,
         unsafe_allow_html=True,
