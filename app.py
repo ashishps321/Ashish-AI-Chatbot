@@ -63,9 +63,6 @@ with st.sidebar:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-if "submit_clicked" not in st.session_state:
-    st.session_state.submit_clicked = False
-
 # ------------------ Main Chat Area ------------------
 st.markdown('<div class="title">🤖 Ashish\'s AI Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">“Your AI companion for knowledge and conversation.”</div>', unsafe_allow_html=True)
@@ -100,23 +97,15 @@ with st.container():
     user_input = st.text_input("💭 Type your message:", key="input", placeholder="Ask me anything...")
 
     if st.button(" Submit ", use_container_width=True):
-        st.session_state.submit_clicked = True
+        if user_input.strip():
+            # Add user msg
+            st.session_state.chat_history.append(("user", user_input))
 
-    # Process input immediately
-    if st.session_state.submit_clicked and user_input.strip():
-        # Add user msg
-        st.session_state.chat_history.append(("user", user_input))
-
-        # Get bot reply
-        response = get_gemini_response(user_input)
-        st.session_state.chat_history.append(("bot", response))
-
-        # Reset trigger
-        st.session_state.submit_clicked = False
-
-    elif st.session_state.submit_clicked and not user_input.strip():
-        st.warning("⚠️ Please enter a question.")
-        st.session_state.submit_clicked = False
+            # Get bot reply
+            response = get_gemini_response(user_input)
+            st.session_state.chat_history.append(("bot", response))
+        else:
+            st.warning("⚠️ Please enter a question.")
 
     st.markdown('</div>', unsafe_allow_html=True)
 
