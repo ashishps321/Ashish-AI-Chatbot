@@ -96,7 +96,7 @@ with st.container():
     # Input with single-click submit (form)
     with st.form(key="chat_form", clear_on_submit=True):
         user_input = st.text_input("💭 Type your message:", key="input", placeholder="Ask me anything...")
-        submit = st.form_submit_button("🚀 Send")
+        submit = st.form_submit_button("🚀 ASK")
 
         if submit and user_input.strip():
             # Add user msg
@@ -160,3 +160,4 @@ elif theme == "Dark":
         """,
         unsafe_allow_html=True,
     )
+
