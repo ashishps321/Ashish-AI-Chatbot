@@ -63,6 +63,9 @@ with st.sidebar:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
+if "submit_clicked" not in st.session_state:
+    st.session_state.submit_clicked = False
+
 # ------------------ Main Chat Area ------------------
 st.markdown('<div class="title">🤖 Ashish\'s AI Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">“Your AI companion for knowledge and conversation.”</div>', unsafe_allow_html=True)
@@ -93,18 +96,27 @@ with st.container():
                 unsafe_allow_html=True,
             )
 
-    # Input with single-click submit (form)
-    with st.form(key="chat_form", clear_on_submit=True):
-        user_input = st.text_input("💭 Type your message:", key="input", placeholder="Ask me anything...")
-        submit = st.form_submit_button("🚀 ASK")
+    # Input at bottom
+    user_input = st.text_input("💭 Type your message:", key="input", placeholder="Ask me anything...")
 
-        if submit and user_input.strip():
-            # Add user msg
-            st.session_state.chat_history.append(("user", user_input))
+    if st.button(" Submit ", use_container_width=True):
+        st.session_state.submit_clicked = True
 
-            # Get bot reply
-            response = get_gemini_response(user_input)
-            st.session_state.chat_history.append(("bot", response))
+    # Process input immediately
+    if st.session_state.submit_clicked and user_input.strip():
+        # Add user msg
+        st.session_state.chat_history.append(("user", user_input))
+
+        # Get bot reply
+        response = get_gemini_response(user_input)
+        st.session_state.chat_history.append(("bot", response))
+
+        # Reset trigger
+        st.session_state.submit_clicked = False
+
+    elif st.session_state.submit_clicked and not user_input.strip():
+        st.warning("⚠️ Please enter a question.")
+        st.session_state.submit_clicked = False
 
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -160,4 +172,3 @@ elif theme == "Dark":
         """,
         unsafe_allow_html=True,
     )
-
