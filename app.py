@@ -1,19 +1,18 @@
-# ------------------ Imports ------------------
 import streamlit as st
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# ------------------ Load .env ------------------
+# Load .env
 load_dotenv()
 
-# ------------------ API Key ------------------
+# API Key
 API_KEY = st.secrets.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
     st.error("Google API key not found. Add it to Streamlit Secrets or .env")
     st.stop()
 
-# ------------------ Configure Gemini ------------------
+# Configure Gemini
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
@@ -24,14 +23,14 @@ def get_gemini_response(question: str):
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 
-# ------------------ Session State ------------------
+# Session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# ------------------ Page Config ------------------
+# Page config
 st.set_page_config(page_title="Bharat Intelligent (BI) Chatbot", page_icon="🤖", layout="wide")
 
-# ------------------ Sidebar ------------------
+# Sidebar
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712109.png", width=80)
     st.title("💬 Bharat Intelligent (BI) Chatbot")
@@ -53,7 +52,7 @@ with st.sidebar:
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
-# ------------------ Custom CSS ------------------
+# Custom CSS
 st.markdown("""
 <style>
 .chat-container {max-width:800px;margin:auto;padding:20px;}
@@ -72,29 +71,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ------------------ Main Chat Area ------------------
+# Main chat area
 st.markdown('<div class="title">🤖 Bharat Intelligent (BI) Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">“Ask anything, get instant answers – powered by AI & Developed by Ashish”</div>', unsafe_allow_html=True)
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
-# Show chat history
+# Display chat history
 for role, msg in st.session_state.chat_history:
     if role == "user":
         st.markdown(f'<div class="msg-row user"><div class="user-msg">{msg}</div></div>', unsafe_allow_html=True)
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# ------------------ Input Section ------------------
-with st.container():
-    col1, col2 = st.columns([8,1])
-    with col1:
-        user_input = st.text_input("💭 Type your message:", key="chat_input", placeholder="Send a message...")
-    with col2:
-        ask = st.button("Ask")
+# Input form
+with st.form(key="chat_form", clear_on_submit=True):
+    user_input = st.text_input("💭 Type your message:", placeholder="Send a message...")
+    submit_button = st.form_submit_button("Ask")
 
-    # Handle submission without rerun
-    if ask and user_input.strip():
+    if submit_button and user_input.strip():
         st.session_state.chat_history.append(("user", user_input))
         response = get_gemini_response(user_input)
         st.session_state.chat_history.append(("bot", response))
-        st.session_state.chat_input = ""  # clears the input box
