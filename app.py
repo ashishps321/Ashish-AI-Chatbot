@@ -30,18 +30,18 @@ if "current_input" not in st.session_state:
     st.session_state.current_input = ""
 
 # Page config
-st.set_page_config(page_title="Bharat Intelligent (BI) Chatbot", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Bharat Intelligence (BI) Chatbot", page_icon="🤖", layout="wide")
 
 # Sidebar
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712109.png", width=80)
-    st.title("💬 Bharat Intelligent (BI) Chatbot")
+    st.title("💬 Bharat Intelligence (BI) Chatbot")
     st.markdown("---")
     st.subheader("⚡ About")
-    st.write("Welcome to **Bharat Intelligent (BI) Chatbot**, your intelligent virtual assistant developed by Ashish.")
+    st.write("Welcome to **Bharat Intelligence (BI) Chatbot**, Get insightful answers instantly with Bharat Intelligence (BI) Chatbot – Powered by AI & Developed by Ashish")
     st.subheader("✨ Key Highlights")
     st.markdown("""
-        ✅ **Smart & Reliable** – Accurate answers powered by Google Gemini  
+        ✅ **Smart & Reliable** – Higly Accurate Answer  
         💬 **Human-like Chat** – Natural and engaging conversations  
         ⚡ **Fast & Responsive** – Quick replies  
         🎯 **Personalized Help** – Tailored responses  
@@ -74,8 +74,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Main chat area
-st.markdown('<div class="title">🤖 Bharat Intelligent (BI) Chatbot</div>', unsafe_allow_html=True)
-st.markdown('<div class="tagline">“Ask anything, get instant answers – powered by AI & Developed by Ashish”</div>', unsafe_allow_html=True)
+st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
+st.markdown('<div class="tagline">“Ask anything, getaccurate answers – powered by AI & Developed by Ashish”</div>', unsafe_allow_html=True)
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 # Display chat history
@@ -96,3 +96,4 @@ with st.form(key="chat_form"):
         response = get_gemini_response(user_message)
         st.session_state.chat_history.append(("bot", response))
         st.session_state.current_input = ""  # Clear input after submit
+
