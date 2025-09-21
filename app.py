@@ -75,7 +75,7 @@ st.markdown("""
 
 # Main chat area
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
-st.markdown('<div class="tagline">“Welcome to Bharat Intelligence (BI) Chatbot – your AI companion for fast, accurate, and insightful answers, powered by AI by ABSingh”</div>', unsafe_allow_html=True)
+st.markdown('<div class="tagline">“Welcome to Bharat Intelligence (BI) Chatbot – your AI companion for fast, accurate, and insightful answers, powered by AI & developed by ABSingh”</div>', unsafe_allow_html=True)
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 # Display chat history
@@ -96,5 +96,6 @@ with st.form(key="chat_form"):
         response = get_gemini_response(user_message)
         st.session_state.chat_history.append(("bot", response))
         st.session_state.current_input = ""  # Clear input after submit
+
 
 
