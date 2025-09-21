@@ -38,7 +38,7 @@ with st.sidebar:
     st.title("💬 Bharat Intelligence (BI) Chatbot")
     st.markdown("---")
     st.subheader("⚡ About")
-    st.write("Welcome to **Bharat Intelligence (BI) Chatbot**, Get insightful answers instantly with Bharat Intelligence (BI) Chatbot – Powered by AI & Developed by Ashish")
+    st.write("Welcome to **Bharat Intelligence (BI) Chatbot – An AI-powered assistant delivering instant, precise, and context-aware answers, developed by Ashish")
     st.subheader("✨ Key Highlights")
     st.markdown("""
         ✅ **Smart & Reliable** – Higly Accurate Answer  
@@ -75,7 +75,7 @@ st.markdown("""
 
 # Main chat area
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
-st.markdown('<div class="tagline">“Ask anything, getaccurate answers – powered by AI & Developed by Ashish”</div>', unsafe_allow_html=True)
+st.markdown('<div class="tagline">“Welcome to Bharat Intelligence (BI) Chatbot – your AI companion for fast, accurate, and insightful answers, powered by AI and developed by Ashish”</div>', unsafe_allow_html=True)
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 # Display chat history
@@ -96,4 +96,5 @@ with st.form(key="chat_form"):
         response = get_gemini_response(user_message)
         st.session_state.chat_history.append(("bot", response))
         st.session_state.current_input = ""  # Clear input after submit
+
 
