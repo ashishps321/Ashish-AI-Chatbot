@@ -27,24 +27,20 @@ def get_gemini_response(question: str):
 # ------------------ Session State ------------------
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-if "submit_flag" not in st.session_state:
-    st.session_state.submit_flag = False
-if "user_input" not in st.session_state:
-    st.session_state.user_input = ""
 
 # ------------------ Page Config ------------------
-st.set_page_config(page_title="Bharat Intelligence (BI) Chatbot", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Bharat Intelligent (BI) Chatbot", page_icon="🤖", layout="wide")
 
 # ------------------ Sidebar ------------------
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712109.png", width=80)
-    st.title("💬 Bharat Intelligence (BI) Chatbot")
+    st.title("💬 Bharat Intelligent (BI) Chatbot")
     st.markdown("---")
     st.subheader("⚡ About")
-    st.write("Welcome to **Bharat Intelligence (BI) Chatbot**, your intelligent virtual assistant developed by Ashish.")
+    st.write("Welcome to **Bharat Intelligent (BI) Chatbot**, your intelligent virtual assistant developed by Ashish.")
     st.subheader("✨ Key Highlights")
     st.markdown("""
-        ✅ **Smart & Reliable** – Higly Accurate answers 
+        ✅ **Smart & Reliable** – Accurate answers powered by Google Gemini  
         💬 **Human-like Chat** – Natural and engaging conversations  
         ⚡ **Fast & Responsive** – Quick replies  
         🎯 **Personalized Help** – Tailored responses  
@@ -54,8 +50,6 @@ with st.sidebar:
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
         st.session_state.chat_history = []
-        st.session_state.user_input = ""
-        st.session_state.submit_flag = False
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
@@ -79,11 +73,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------ Main Chat Area ------------------
-st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
+st.markdown('<div class="title">🤖 Bharat Intelligent (BI) Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">“Ask anything, get instant answers – powered by AI & Developed by Ashish”</div>', unsafe_allow_html=True)
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
-# Display chat history
+# Show chat history
 for role, msg in st.session_state.chat_history:
     if role == "user":
         st.markdown(f'<div class="msg-row user"><div class="user-msg">{msg}</div></div>', unsafe_allow_html=True)
@@ -94,15 +88,13 @@ for role, msg in st.session_state.chat_history:
 with st.container():
     col1, col2 = st.columns([8,1])
     with col1:
-        st.session_state.user_input = st.text_input("💭 Type your message:", value=st.session_state.user_input, key="chat_input", placeholder="Send a message...")
+        user_input = st.text_input("💭 Type your message:", key="chat_input", placeholder="Send a message...")
     with col2:
         ask = st.button("Ask")
 
-    # Handle submission
-    if ask and st.session_state.user_input.strip():
-        st.session_state.chat_history.append(("user", st.session_state.user_input))
-        response = get_gemini_response(st.session_state.user_input)
+    # Handle submission without rerun
+    if ask and user_input.strip():
+        st.session_state.chat_history.append(("user", user_input))
+        response = get_gemini_response(user_input)
         st.session_state.chat_history.append(("bot", response))
-        st.session_state.user_input = ""  # clear input
-        st.experimental_rerun()
-
+        st.session_state.chat_input = ""  # clears the input box
