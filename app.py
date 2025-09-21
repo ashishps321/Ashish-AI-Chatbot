@@ -65,7 +65,6 @@ with st.sidebar:
     if st.button("🧹 Clear Chat"):
         st.session_state.chat_history = []
         st.session_state.user_input_value = ""
-        st.experimental_rerun()
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
@@ -116,16 +115,18 @@ with col2:
     send = st.button("Ask")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# Handle submission
+# ------------------ Handle submission safely ------------------
 if (send and user_input.strip()):
+    # Append user message
     st.session_state.chat_history.append(("user", user_input))
+    
+    # Get bot response
     response = get_gemini_response(user_input)
     st.session_state.chat_history.append(("bot", response))
 
-    # Reset input safely
+    # Reset input safely (no rerun)
     st.session_state.user_input_value = ""
-    st.experimental_rerun()
 
-# Handle Enter key press
+# Handle typing in input (Enter key)
 if user_input.strip() and not send:
     st.session_state.user_input_value = user_input
