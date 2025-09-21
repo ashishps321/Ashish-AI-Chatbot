@@ -29,6 +29,15 @@ if "chat_history" not in st.session_state:
 if "user_input" not in st.session_state:
     st.session_state.user_input = ""
 
+# Submit function
+def submit_message():
+    user_msg = st.session_state.user_input.strip()
+    if user_msg:
+        st.session_state.chat_history.append(("user", user_msg))
+        bot_response = get_gemini_response(user_msg)
+        st.session_state.chat_history.append(("bot", bot_response))
+        st.session_state.user_input = ""  # Clear input after sending
+
 # Page config
 st.set_page_config(page_title="Bharat Intelligence (BI) Chatbot", page_icon="🤖", layout="wide")
 
@@ -38,9 +47,7 @@ with st.sidebar:
     st.title("💬 Bharat Intelligence (BI) Chatbot")
     st.markdown("---")
     st.subheader("⚡ About")
-    st.write(
-        "Welcome to **Bharat Intelligence (BI) Chatbot v1.0** – an AI-powered assistant delivering instant, precise, and context-aware answers."
-    )
+    st.write("Welcome to **Bharat Intelligence (BI) Chatbot v1.0** – AI-powered assistant delivering instant, precise, and context-aware answers.")
     st.subheader("✨ Key Highlights")
     st.markdown("""
         ✅ **Smart & Reliable** – Highly Accurate Answers  
@@ -69,7 +76,7 @@ st.markdown("""
 .title {text-align:center;font-size:32px;font-weight:bold;color:#0d47a1;margin-bottom:4px;}
 .tagline {text-align:center;font-size:14px;color:#6c757d;margin-bottom:25px;}
 .input-container {position:fixed;bottom:15px;width:80%;left:50%;transform:translateX(-50%);background:white;padding:10px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;gap:10px;z-index:999;}
-.stTextInput {flex:1;}
+.stTextArea textarea {flex:1;resize:vertical;padding:8px;border-radius:8px;border:1px solid #ddd;font-size:16px;}
 .stButton > button {background-color:#0d6efd;color:white;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;font-weight:bold;}
 .stButton > button:hover {background-color:#0b5ed7;}
 </style>
@@ -91,13 +98,13 @@ for role, msg in st.session_state.chat_history:
 st.markdown('<div class="input-container">', unsafe_allow_html=True)
 col1, col2 = st.columns([8,1])
 with col1:
-    st.session_state.user_input = st.text_input("💭 Type your message:", value=st.session_state.user_input, placeholder="Send a message...", key="chat_input")
+    st.text_area(
+        label="💭 Type your message:",
+        key="user_input",
+        placeholder="Type message here... (Shift+Enter for new line)",
+        height=70
+    )
 with col2:
     if st.button("Ask"):
-        user_msg = st.session_state.user_input.strip()
-        if user_msg:
-            st.session_state.chat_history.append(("user", user_msg))
-            response = get_gemini_response(user_msg)
-            st.session_state.chat_history.append(("bot", response))
-            st.session_state.user_input = ""  # clear input after sending
+        submit_message()
 st.markdown('</div>', unsafe_allow_html=True)
