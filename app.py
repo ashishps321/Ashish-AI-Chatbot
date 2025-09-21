@@ -26,17 +26,8 @@ def get_gemini_response(question: str):
 # Session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
-if "user_input" not in st.session_state:
-    st.session_state.user_input = ""
-
-# Submit function
-def submit_message():
-    user_msg = st.session_state.user_input.strip()
-    if user_msg:
-        st.session_state.chat_history.append(("user", user_msg))
-        bot_response = get_gemini_response(user_msg)
-        st.session_state.chat_history.append(("bot", bot_response))
-        st.session_state.user_input = ""  # Clear input after sending
+if "current_input" not in st.session_state:
+    st.session_state.current_input = ""
 
 # Page config
 st.set_page_config(page_title="Bharat Intelligence (BI) Chatbot", page_icon="🤖", layout="wide")
@@ -47,10 +38,10 @@ with st.sidebar:
     st.title("💬 Bharat Intelligence (BI) Chatbot")
     st.markdown("---")
     st.subheader("⚡ About")
-    st.write("Welcome to **Bharat Intelligence (BI) Chatbot v1.0** – AI-powered assistant delivering instant, precise, and context-aware answers.")
+    st.write("Welcome to **Bharat Intelligence (BI) Chatbot v1.0 – An AI-powered assistant delivering instant, precise, and context-aware answers")
     st.subheader("✨ Key Highlights")
     st.markdown("""
-        ✅ **Smart & Reliable** – Highly Accurate Answers  
+        ✅ **Smart & Reliable** – Higly Accurate Answer  
         💬 **Human-like Chat** – Natural and engaging conversations  
         ⚡ **Fast & Responsive** – Quick replies  
         🎯 **Personalized Help** – Tailored responses  
@@ -76,7 +67,7 @@ st.markdown("""
 .title {text-align:center;font-size:32px;font-weight:bold;color:#0d47a1;margin-bottom:4px;}
 .tagline {text-align:center;font-size:14px;color:#6c757d;margin-bottom:25px;}
 .input-container {position:fixed;bottom:15px;width:80%;left:50%;transform:translateX(-50%);background:white;padding:10px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;gap:10px;z-index:999;}
-.stTextArea textarea {flex:1;resize:vertical;padding:8px;border-radius:8px;border:1px solid #ddd;font-size:16px;}
+.stTextInput {flex:1;}
 .stButton > button {background-color:#0d6efd;color:white;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;font-weight:bold;}
 .stButton > button:hover {background-color:#0b5ed7;}
 </style>
@@ -84,7 +75,7 @@ st.markdown("""
 
 # Main chat area
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
-st.markdown('<div class="tagline">“Get insightful answers instantly with Bharat Intelligence (BI) Chatbot – Powered by AI & Developed by Ashish”</div>', unsafe_allow_html=True)
+st.markdown('<div class="tagline">“Welcome to Bharat Intelligence (BI) Chatbot – your AI companion for fast, accurate, and insightful answers, powered by AI by ABSingh”</div>', unsafe_allow_html=True)
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 # Display chat history
@@ -94,17 +85,16 @@ for role, msg in st.session_state.chat_history:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# Input container
-st.markdown('<div class="input-container">', unsafe_allow_html=True)
-col1, col2 = st.columns([8,1])
-with col1:
-    st.text_area(
-        label="💭 Type your message:",
-        key="user_input",
-        placeholder="Type message here... (Shift+Enter for new line)",
-        height=70
-    )
-with col2:
-    if st.button("Ask"):
-        submit_message()
-st.markdown('</div>', unsafe_allow_html=True)
+# Input form
+with st.form(key="chat_form"):
+    st.session_state.current_input = st.text_input("💭 Type your message:", placeholder="Send a message...", value=st.session_state.current_input)
+    submit_button = st.form_submit_button("Ask")
+
+    if submit_button and st.session_state.current_input.strip():
+        user_message = st.session_state.current_input.strip()
+        st.session_state.chat_history.append(("user", user_message))
+        response = get_gemini_response(user_message)
+        st.session_state.chat_history.append(("bot", response))
+        st.session_state.current_input = ""  # Clear input after submit
+
+
