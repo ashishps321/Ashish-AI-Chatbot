@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # Load .env (for local dev)
 load_dotenv()
 
-# API Key Setup
+# ------------------ API Key ------------------
 API_KEY = None
 if "GOOGLE_API_KEY" in st.secrets:
     API_KEY = st.secrets["GOOGLE_API_KEY"]
@@ -34,8 +34,10 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "user_input_value" not in st.session_state:
     st.session_state.user_input_value = ""
+if "submit_flag" not in st.session_state:
+    st.session_state.submit_flag = False
 
-# ------------------ Streamlit UI ------------------
+# ------------------ Streamlit Page ------------------
 st.set_page_config(page_title="ApkaApna AI Chatbot", page_icon="🤖", layout="wide")
 
 # ------------------ Sidebar ------------------
@@ -65,10 +67,11 @@ with st.sidebar:
     if st.button("🧹 Clear Chat"):
         st.session_state.chat_history = []
         st.session_state.user_input_value = ""
+        st.session_state.submit_flag = False
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
-# ------------------ Custom ChatGPT Style ------------------
+# ------------------ Custom CSS ------------------
 st.markdown("""
 <style>
 body {background-color:#f7f8fa; font-family:"Segoe UI", sans-serif;}
@@ -100,7 +103,7 @@ for role, msg in st.session_state.chat_history:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# Input + Ask button
+# ------------------ Input Section ------------------
 st.markdown('<div class="input-container">', unsafe_allow_html=True)
 col1, col2 = st.columns([8,1])
 with col1:
@@ -115,18 +118,23 @@ with col2:
     send = st.button("Ask")
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ------------------ Handle submission safely ------------------
-if (send and user_input.strip()):
-    # Append user message
+# ------------------ Handle Submission ------------------
+submit = False
+if send and user_input.strip():
+    submit = True
+elif user_input.strip() and st.session_state.submit_flag:
+    submit = True
+
+if submit:
     st.session_state.chat_history.append(("user", user_input))
-    
-    # Get bot response
     response = get_gemini_response(user_input)
     st.session_state.chat_history.append(("bot", response))
 
-    # Reset input safely (no rerun)
+    # Reset input safely
     st.session_state.user_input_value = ""
+    st.session_state.submit_flag = False
 
-# Handle typing in input (Enter key)
+# Set submit_flag if typing but not clicked
 if user_input.strip() and not send:
     st.session_state.user_input_value = user_input
+    st.session_state.submit_flag = True
