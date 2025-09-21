@@ -3,16 +3,16 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# ------------------ Load .env ------------------
+# Load .env
 load_dotenv()
 
-# ------------------ API Key ------------------
+# API Key
 API_KEY = st.secrets.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
     st.error("Google API key not found. Add it to Streamlit Secrets or .env")
     st.stop()
 
-# ------------------ Configure Gemini ------------------
+# Configure Gemini
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
@@ -23,14 +23,16 @@ def get_gemini_response(question: str):
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 
-# ------------------ Session state ------------------
+# Session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""
 
-# ------------------ Page config ------------------
+# Page config
 st.set_page_config(page_title="Bharat Intelligence (BI) Chatbot", page_icon="🤖", layout="wide")
 
-# ------------------ Sidebar ------------------
+# Sidebar
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712109.png", width=80)
     st.title("💬 Bharat Intelligence (BI) Chatbot")
@@ -54,7 +56,7 @@ with st.sidebar:
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
-# ------------------ Custom CSS ------------------
+# Custom CSS
 st.markdown("""
 <style>
 .chat-container {max-width:800px;margin:auto;padding:20px;}
@@ -73,7 +75,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ------------------ Main chat area ------------------
+# Main chat area
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">“Get insightful answers instantly with Bharat Intelligence (BI) Chatbot – Powered by AI & Developed by Ashish”</div>', unsafe_allow_html=True)
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
@@ -85,14 +87,17 @@ for role, msg in st.session_state.chat_history:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# ------------------ Input form ------------------
-with st.form(key="chat_form", clear_on_submit=True):
-    user_input = st.text_input("💭 Type your message:", placeholder="Send a message...")
-    submit_button = st.form_submit_button("Ask")
-
-    if submit_button and user_input.strip():
-        # Add user message
-        st.session_state.chat_history.append(("user", user_input))
-        # Get bot response
-        response = get_gemini_response(user_input)
-        st.session_state.chat_history.append(("bot", response))
+# Input container
+st.markdown('<div class="input-container">', unsafe_allow_html=True)
+col1, col2 = st.columns([8,1])
+with col1:
+    st.session_state.user_input = st.text_input("💭 Type your message:", value=st.session_state.user_input, placeholder="Send a message...", key="chat_input")
+with col2:
+    if st.button("Ask"):
+        user_msg = st.session_state.user_input.strip()
+        if user_msg:
+            st.session_state.chat_history.append(("user", user_msg))
+            response = get_gemini_response(user_msg)
+            st.session_state.chat_history.append(("bot", response))
+            st.session_state.user_input = ""  # clear input after sending
+st.markdown('</div>', unsafe_allow_html=True)
