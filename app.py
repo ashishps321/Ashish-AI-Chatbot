@@ -95,4 +95,3 @@ with st.form(key="chat_form", clear_on_submit=True):
         # Get bot response
         response = get_gemini_response(user_input)
         st.session_state.chat_history.append(("bot", response))
-        st.experimental_rerun()
