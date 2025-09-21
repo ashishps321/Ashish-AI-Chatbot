@@ -46,7 +46,7 @@ with st.sidebar:
     st.subheader("✨ Key Highlights")
     st.markdown(
         """
-        ✅ **Smart & Reliable** – Accurate answers powered by Google Gemini  
+        ✅ **Smart & Reliable** –Highly accurate answer  
         💬 **Human-like Chat** – Natural and engaging conversations  
         ⚡ **Fast & Responsive** – Quick replies for smooth experience  
         🎯 **Personalized Help** – Tailored responses just for you  
@@ -133,17 +133,35 @@ st.markdown(
         margin-bottom: 25px;
     }
 
-    /* Input box sticky bottom */
-    .stTextInput > div {
+    /* Input section sticky bottom */
+    .input-container {
         position: fixed;
-        bottom: 20px;
+        bottom: 15px;
         width: 80%;
         left: 50%;
         transform: translateX(-50%);
+        background: white;
+        padding: 10px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        gap: 10px;
         z-index: 999;
     }
+    .stTextInput {
+        flex: 1;
+    }
     .stButton > button {
-        display: none; /* hide default button */
+        background-color: #0d6efd;
+        color: white;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .stButton > button:hover {
+        background-color: #0b5ed7;
     }
     </style>
     """,
@@ -178,19 +196,27 @@ with st.container():
                 unsafe_allow_html=True,
             )
 
-    # Input box (fixed bottom)
-    user_input = st.text_input("💭 Type your message:", key="input", placeholder="Send a message...")
+    # Input + Button section
+    with st.container():
+        st.markdown('<div class="input-container">', unsafe_allow_html=True)
+        col1, col2 = st.columns([8,1])
+        with col1:
+            user_input = st.text_input("💭 Type your message:", key="input", label_visibility="collapsed", placeholder="Send a message...")
+        with col2:
+            send = st.button("Ask")
 
-    if user_input.strip():
-        # Add user msg
-        st.session_state.chat_history.append(("user", user_input))
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        # Get bot reply
-        response = get_gemini_response(user_input)
-        st.session_state.chat_history.append(("bot", response))
+        if (user_input and user_input.strip() and send) or (user_input and user_input.strip() and not send and st.session_state.input):
+            # Add user msg
+            st.session_state.chat_history.append(("user", user_input))
 
-        # Clear input
-        st.session_state.input = ""
-        st.rerun()
+            # Get bot reply
+            response = get_gemini_response(user_input)
+            st.session_state.chat_history.append(("bot", response))
+
+            # Clear input
+            st.session_state.input = ""
+            st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
