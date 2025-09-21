@@ -27,18 +27,18 @@ def get_gemini_response(question: str):
     return response.text
 
 # ------------------ Streamlit UI ------------------
-st.set_page_config(page_title="AI Chatbot by ASHISH", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="ApkaApna AI Chatbot", page_icon="🤖", layout="wide")
 
 # ------------------ Sidebar ------------------
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712109.png", width=80)
-    st.title("💬 Ashish's AI Chatbot")
+    st.title("💬 ApkaApna AI Chatbot")
     st.markdown("---")
 
     st.subheader("⚡ About")
     st.write(
         """
-        Welcome to **Ashish’s AI Chatbot**, your intelligent virtual assistant  
+        Welcome to **ApkaApna AI Chatbot**, your intelligent virtual assistant  
         designed to provide instant, accurate, and engaging responses.  
         """
     )
@@ -160,8 +160,8 @@ st.markdown(
 )
 
 # ------------------ Main Chat Area ------------------
-st.markdown('<div class="title">🤖 Ashish\'s AI Chatbot</div>', unsafe_allow_html=True)
-st.markdown('<div class="tagline">“ChatGPT style conversation UI”</div>', unsafe_allow_html=True)
+st.markdown('<div class="title">🤖 ApkaApna AI Chatbot</div>', unsafe_allow_html=True)
+st.markdown('<div class="tagline">“Ask anything, get instant answers – powered by AI & Develpoed by ABSingh”</div>', unsafe_allow_html=True)
 
 with st.container():
     st.markdown('<div class="chat-container">', unsafe_allow_html=True)
@@ -211,3 +211,4 @@ with st.container():
             st.session_state.submit_flag = True
 
     st.markdown('</div>', unsafe_allow_html=True)
+
