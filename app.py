@@ -27,6 +27,10 @@ def get_gemini_response(question: str):
 # ------------------ Session State ------------------
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "submit_flag" not in st.session_state:
+    st.session_state.submit_flag = False
+if "user_input" not in st.session_state:
+    st.session_state.user_input = ""
 
 # ------------------ Page Config ------------------
 st.set_page_config(page_title="Bharat Intelligent (BI) Chatbot", page_icon="🤖", layout="wide")
@@ -37,23 +41,21 @@ with st.sidebar:
     st.title("💬 Bharat Intelligent (BI) Chatbot")
     st.markdown("---")
     st.subheader("⚡ About")
-    st.write(
-        "Welcome to **Bharat Intelligent (BI) Chatbot**, your intelligent virtual assistant developed by Ashish."
-    )
+    st.write("Welcome to **Bharat Intelligent (BI) Chatbot**, your intelligent virtual assistant developed by Ashish.")
     st.subheader("✨ Key Highlights")
-    st.markdown(
-        """
+    st.markdown("""
         ✅ **Smart & Reliable** – Accurate answers powered by Google Gemini  
         💬 **Human-like Chat** – Natural and engaging conversations  
         ⚡ **Fast & Responsive** – Quick replies  
         🎯 **Personalized Help** – Tailored responses  
         🔒 **Secure & Private** – Safe & confidential  
-        🌐 **Always Available** – 24/7 assistance  
-        """
-    )
+        🌐 **Always Available** – 24/7 assistance
+    """)
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
         st.session_state.chat_history = []
+        st.session_state.user_input = ""
+        st.session_state.submit_flag = False
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
@@ -88,16 +90,18 @@ for role, msg in st.session_state.chat_history:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# ------------------ Input Form ------------------
-with st.form(key="chat_form"):
-    user_input = st.text_input("💭 Type your message:", placeholder="Send a message...")
-    submit_button = st.form_submit_button("Ask")
+# ------------------ Input Section ------------------
+with st.container():
+    col1, col2 = st.columns([8,1])
+    with col1:
+        st.session_state.user_input = st.text_input("💭 Type your message:", value=st.session_state.user_input, key="chat_input", placeholder="Send a message...")
+    with col2:
+        ask = st.button("Ask")
 
-    if submit_button and user_input.strip():
-        # Add user message
-        st.session_state.chat_history.append(("user", user_input))
-        # Get bot response
-        response = get_gemini_response(user_input)
+    # Handle submission
+    if ask and st.session_state.user_input.strip():
+        st.session_state.chat_history.append(("user", st.session_state.user_input))
+        response = get_gemini_response(st.session_state.user_input)
         st.session_state.chat_history.append(("bot", response))
-        # Rerun to display immediately
+        st.session_state.user_input = ""  # clear input
         st.experimental_rerun()
