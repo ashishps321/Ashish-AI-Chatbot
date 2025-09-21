@@ -26,6 +26,8 @@ def get_gemini_response(question: str):
 # Session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "current_input" not in st.session_state:
+    st.session_state.current_input = ""
 
 # Page config
 st.set_page_config(page_title="Bharat Intelligent (BI) Chatbot", page_icon="🤖", layout="wide")
@@ -84,11 +86,13 @@ for role, msg in st.session_state.chat_history:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
 # Input form
-with st.form(key="chat_form", clear_on_submit=True):
-    user_input = st.text_input("💭 Type your message:", placeholder="Send a message...")
+with st.form(key="chat_form"):
+    st.session_state.current_input = st.text_input("💭 Type your message:", placeholder="Send a message...", value=st.session_state.current_input)
     submit_button = st.form_submit_button("Ask")
 
-    if submit_button and user_input.strip():
-        st.session_state.chat_history.append(("user", user_input))
-        response = get_gemini_response(user_input)
+    if submit_button and st.session_state.current_input.strip():
+        user_message = st.session_state.current_input.strip()
+        st.session_state.chat_history.append(("user", user_message))
+        response = get_gemini_response(user_message)
         st.session_state.chat_history.append(("bot", response))
+        st.session_state.current_input = ""  # Clear input after submit
