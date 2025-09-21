@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # load .env for local development (no effect on Streamlit Cloud)
 load_dotenv()
 
-# Try Streamlit secrets first (when deployed), otherwise fallback to environment variable (local)
+# API Key Setup
 API_KEY = None
 if "GOOGLE_API_KEY" in st.secrets:
     API_KEY = st.secrets["GOOGLE_API_KEY"]
@@ -46,7 +46,7 @@ with st.sidebar:
     st.subheader("✨ Key Highlights")
     st.markdown(
         """
-        ✅ **Smart & Reliable** –Highly accurate answer  
+        ✅ **Smart & Reliable** – Accurate answers powered by Google Gemini  
         💬 **Human-like Chat** – Natural and engaging conversations  
         ⚡ **Fast & Responsive** – Quick replies for smooth experience  
         🎯 **Personalized Help** – Tailored responses just for you  
@@ -66,12 +66,13 @@ with st.sidebar:
 # ------------------ Session State ------------------
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
+if "submit_flag" not in st.session_state:
+    st.session_state.submit_flag = False
 
 # ------------------ Custom ChatGPT Style ------------------
 st.markdown(
     """
     <style>
-    /* Overall App */
     body {
         background-color: #f7f8fa;
         font-family: "Segoe UI", sans-serif;
@@ -82,17 +83,12 @@ st.markdown(
         padding: 20px;
     }
 
-    /* User and Bot messages */
     .msg-row {
         display: flex;
         margin: 12px 0;
     }
-    .msg-row.user {
-        justify-content: flex-end;
-    }
-    .msg-row.bot {
-        justify-content: flex-start;
-    }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.bot { justify-content: flex-start; }
 
     .user-msg, .bot-msg {
         padding: 12px 16px;
@@ -103,22 +99,17 @@ st.markdown(
         word-wrap: break-word;
         box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-
-    /* User bubble */
     .user-msg {
         background-color: #0d6efd;
         color: white;
         border-bottom-right-radius: 5px;
     }
-
-    /* Bot bubble */
     .bot-msg {
         background-color: #e9ecef;
         color: #212529;
         border-bottom-left-radius: 5px;
     }
 
-    /* Title & tagline */
     .title {
         text-align: center;
         font-size: 32px;
@@ -179,20 +170,12 @@ with st.container():
     for role, msg in st.session_state.chat_history:
         if role == "user":
             st.markdown(
-                f"""
-                <div class="msg-row user">
-                    <div class="user-msg">{msg}</div>
-                </div>
-                """,
+                f"""<div class="msg-row user"><div class="user-msg">{msg}</div></div>""",
                 unsafe_allow_html=True,
             )
         else:
             st.markdown(
-                f"""
-                <div class="msg-row bot">
-                    <div class="bot-msg">{msg}</div>
-                </div>
-                """,
+                f"""<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>""",
                 unsafe_allow_html=True,
             )
 
@@ -201,22 +184,30 @@ with st.container():
         st.markdown('<div class="input-container">', unsafe_allow_html=True)
         col1, col2 = st.columns([8,1])
         with col1:
-            user_input = st.text_input("💭 Type your message:", key="input", label_visibility="collapsed", placeholder="Send a message...")
+            user_input = st.text_input(
+                "💭 Type your message:",
+                key="chat_input",
+                label_visibility="collapsed",
+                placeholder="Send a message..."
+            )
         with col2:
             send = st.button("Ask")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-        if (user_input and user_input.strip() and send) or (user_input and user_input.strip() and not send and st.session_state.input):
-            # Add user msg
+        # If user pressed Ask button OR Enter
+        if (send and user_input.strip()) or (st.session_state.submit_flag and user_input.strip()):
             st.session_state.chat_history.append(("user", user_input))
-
-            # Get bot reply
             response = get_gemini_response(user_input)
             st.session_state.chat_history.append(("bot", response))
 
-            # Clear input
-            st.session_state.input = ""
+            # Reset safely
+            st.session_state.chat_input = ""
+            st.session_state.submit_flag = False
             st.rerun()
+
+        # Handle Enter without button
+        if user_input.strip() and not send:
+            st.session_state.submit_flag = True
 
     st.markdown('</div>', unsafe_allow_html=True)
