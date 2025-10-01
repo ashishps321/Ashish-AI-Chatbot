@@ -38,8 +38,6 @@ def get_gemini_response(question: str):
 # Initialize session state
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
-if "current_input" not in st.session_state:
-    st.session_state["current_input"] = ""
 
 # Page config
 st.set_page_config(page_title="Bharat Intelligence Chatbot", page_icon="🤖", layout="wide")
@@ -63,6 +61,7 @@ with st.sidebar:
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
         st.session_state["chat_history"] = []
+        st.experimental_rerun()
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
@@ -95,7 +94,7 @@ with chat_container:
 
 # Input form
 with st.form("chat_form"):
-    user_input = st.text_input("💭 Type your message:", key="current_input")
+    user_input = st.text_input("💭 Type your message:", value="", key="current_input")
     uploaded_files = st.file_uploader(
         "📎 Upload files (txt, pdf, docx)",
         type=["txt","pdf","docx"],
@@ -105,12 +104,12 @@ with st.form("chat_form"):
 
 # Handle submission
 if submit_button:
-    user_message = None
+    combined_input = ""
 
     # Text input
     if user_input.strip():
-        user_message = user_input.strip()
-        st.session_state["chat_history"].append(("user", user_message))
+        combined_input += user_input.strip()
+        st.session_state["chat_history"].append(("user", user_input.strip()))
 
     # File upload handling
     if uploaded_files:
@@ -130,18 +129,19 @@ if submit_button:
 
         combined_text = "\n".join(file_texts)
         st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_text}"))
-        user_message = (user_message + "\n" + combined_text) if user_message else combined_text
+        combined_input += "\n" + combined_text if combined_input else combined_text
 
-    # Send to AI with typing effect
-    if user_message:
+    # Send to AI and show typing animation
+    if combined_input:
         bot_msg = ""
-        response = get_gemini_response(user_message)
+        response = get_gemini_response(combined_input)
         for line in response.split(". "):
             bot_msg += line + ". "
             if st.session_state["chat_history"] and st.session_state["chat_history"][-1][0] == "bot":
                 st.session_state["chat_history"][-1] = ("bot", bot_msg)
             else:
                 st.session_state["chat_history"].append(("bot", bot_msg))
-            time.sleep(0.05)  # typing animation
-        st.session_state["current_input"] = ""
+            time.sleep(0.03)
 
+        # Reset input safely
+        st.experimental_rerun()
