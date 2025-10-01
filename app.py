@@ -81,19 +81,17 @@ st.markdown("""
 # Main chat area
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">“Your AI companion for fast, accurate, and insightful answers, powered by AI & developed by ABSingh”</div>', unsafe_allow_html=True)
-chat_container = st.container()
 
 # Display chat history
-with chat_container:
-    for role, msg in st.session_state["chat_history"]:
-        if role == "user":
-            st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
-        else:
-            st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
+for role, msg in st.session_state["chat_history"]:
+    if role == "user":
+        st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
 
 # Input form
 with st.form("chat_form"):
-    user_input = st.text_input("💭 Type your message:", value="", key="current_input")
+    user_input = st.text_input("💭 Type your message:", key="current_input")
     uploaded_files = st.file_uploader(
         "📎 Upload files (txt, pdf, docx)",
         type=["txt","pdf","docx"],
@@ -105,12 +103,12 @@ with st.form("chat_form"):
 if submit_button:
     combined_input = ""
 
-    # Text input
+    # Add text input
     if user_input.strip():
         combined_input += user_input.strip()
         st.session_state["chat_history"].append(("user", user_input.strip()))
 
-    # File upload
+    # Add uploaded files
     if uploaded_files:
         file_texts = []
         for file in uploaded_files:
@@ -135,5 +133,6 @@ if submit_button:
         response = get_gemini_response(combined_input)
         st.session_state["chat_history"].append(("bot", response))
 
-    # Clear text input safely
+    # Clear input safely by rerun
     st.session_state["current_input"] = ""
+    st.experimental_rerun()
