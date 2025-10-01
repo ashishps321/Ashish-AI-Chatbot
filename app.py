@@ -57,7 +57,7 @@ with st.sidebar:
 # Custom CSS
 st.markdown("""
 <style>
-.chat-container {max-width:800px;margin:auto;padding:20px;overflow-y:auto; height:60vh;}
+.chat-container {max-width:800px;margin:auto;padding:10px;overflow-y:auto; height:60vh; scroll-behavior: smooth;}
 .user-bubble {background-color:#0d6efd;color:white;padding:12px;border-radius:18px;max-width:70%;margin-left:auto;margin-bottom:8px;word-wrap:break-word;}
 .bot-bubble {background-color:#e9ecef;color:#212529;padding:12px;border-radius:18px;max-width:70%;margin-right:auto;margin-bottom:8px;word-wrap:break-word;}
 .title {text-align:center;font-size:32px;font-weight:bold;color:#0d47a1;margin-bottom:4px;}
@@ -74,12 +74,12 @@ st.markdown('<div class="tagline">Your AI companion for fast, accurate, and insi
 
 # File upload section
 uploaded_files = st.file_uploader(
-    "📎 Upload files (txt, pdf, docx) before asking your question", 
-    type=["txt","pdf","docx"], 
+    "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) before asking your question", 
+    type=["txt","pdf","docx","png","jpg","jpeg","bmp"], 
     accept_multiple_files=True
 )
 
-# Chat input using form for first-click reliability
+# Chat input using form
 with st.form("chat_form"):
     user_input = st.text_input("💭 Type your message:", key="user_input_key")
     submit_button = st.form_submit_button("Ask")
@@ -103,6 +103,9 @@ if submit_button and user_input.strip():
                 doc = docx.Document(file)
                 text = "\n".join([p.text for p in doc.paragraphs])
                 file_texts.append(text)
+            elif file.type.startswith("image/"):
+                # Display image in chat
+                st.session_state["chat_history"].append(("user", f"[Uploaded Image] {file.name}"))
         if file_texts:
             combined_files_text = "\n".join(file_texts)
             st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_files_text}"))
@@ -113,10 +116,21 @@ if submit_button and user_input.strip():
     st.session_state["chat_history"].append(("bot", response))
 
 # Display chat history
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-for role, msg in st.session_state["chat_history"]:
-    if role == "user":
-        st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+chat_placeholder = st.empty()
+with chat_placeholder.container():
+    for role, msg in st.session_state["chat_history"]:
+        if role == "user":
+            st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
+
+# Auto scroll to bottom
+st.markdown(
+    """
+    <script>
+        const chatContainer = window.parent.document.querySelector('.chat-container');
+        if(chatContainer){chatContainer.scrollTop = chatContainer.scrollHeight;}
+    </script>
+    """,
+    unsafe_allow_html=True
+)
