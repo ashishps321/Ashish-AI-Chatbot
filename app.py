@@ -1,11 +1,9 @@
 import streamlit as st
 import os
-import time
 import google.generativeai as genai
 from dotenv import load_dotenv
-from io import BytesIO
 
-# PDF/Word handling
+# File handling
 try:
     from PyPDF2 import PdfReader
 except ImportError:
@@ -28,6 +26,7 @@ genai.configure(api_key=API_KEY)
 MODEL_NAME = "models/gemini-2.0-flash"
 model = genai.GenerativeModel(MODEL_NAME)
 
+# Function to get AI response
 def get_gemini_response(question: str):
     try:
         response = model.generate_content(question)
@@ -35,7 +34,7 @@ def get_gemini_response(question: str):
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 
-# Initialize session state
+# Initialize chat history
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
 
@@ -48,7 +47,7 @@ with st.sidebar:
     st.title("💬 Bharat Intelligence (BI) Chatbot")
     st.markdown("---")
     st.subheader("⚡ About")
-    st.write("Welcome to **Bharat Intelligence (BI) Chatbot v1.0 – An AI-powered assistant delivering instant, precise, and context-aware answers**")
+    st.write("Welcome to **Bharat Intelligence (BI) Chatbot v1.0 – AI-powered assistant delivering instant, precise, and context-aware answers**")
     st.subheader("✨ Key Highlights")
     st.markdown("""
         ✅ **Smart & Reliable** – Highly Accurate Answer  
@@ -65,7 +64,7 @@ with st.sidebar:
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
-# Custom CSS for ChatGPT-style bubbles
+# Custom CSS
 st.markdown("""
 <style>
 .chat-container {max-width:800px;margin:auto;padding:20px;overflow-y:auto; height:70vh;}
@@ -111,7 +110,7 @@ if submit_button:
         combined_input += user_input.strip()
         st.session_state["chat_history"].append(("user", user_input.strip()))
 
-    # File upload handling
+    # File upload
     if uploaded_files:
         file_texts = []
         for file in uploaded_files:
@@ -131,17 +130,10 @@ if submit_button:
         st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_text}"))
         combined_input += "\n" + combined_text if combined_input else combined_text
 
-    # Send to AI and show typing animation
+    # Get AI response
     if combined_input:
-        bot_msg = ""
         response = get_gemini_response(combined_input)
-        for line in response.split(". "):
-            bot_msg += line + ". "
-            if st.session_state["chat_history"] and st.session_state["chat_history"][-1][0] == "bot":
-                st.session_state["chat_history"][-1] = ("bot", bot_msg)
-            else:
-                st.session_state["chat_history"].append(("bot", bot_msg))
-            time.sleep(0.03)
+        st.session_state["chat_history"].append(("bot", response))
 
-        # Reset input safely
-        st.experimental_rerun()
+    # Clear text input safely
+    st.session_state["current_input"] = ""
