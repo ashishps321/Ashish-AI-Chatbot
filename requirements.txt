@@ -4,3 +4,4 @@ python-dotenv
 requests
 PyPDF2
 python-docx
+Pillow==10.0.0
