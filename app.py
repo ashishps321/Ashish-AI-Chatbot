@@ -57,7 +57,7 @@ with st.sidebar:
 # Custom CSS
 st.markdown("""
 <style>
-.chat-container {max-width:800px;margin:auto;padding:20px;overflow-y:auto; height:70vh;}
+.chat-container {max-width:800px;margin:auto;padding:20px;overflow-y:auto; height:60vh;}
 .user-bubble {background-color:#0d6efd;color:white;padding:12px;border-radius:18px;max-width:70%;margin-left:auto;margin-bottom:8px;word-wrap:break-word;}
 .bot-bubble {background-color:#e9ecef;color:#212529;padding:12px;border-radius:18px;max-width:70%;margin-right:auto;margin-bottom:8px;word-wrap:break-word;}
 .title {text-align:center;font-size:32px;font-weight:bold;color:#0d47a1;margin-bottom:4px;}
@@ -68,29 +68,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Title and tagline
+# Title & description
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">Your AI companion for fast, accurate, and insightful answers, powered by AI & developed by ABSingh</div>', unsafe_allow_html=True)
 
-# File upload (just below description)
+# File upload section
 uploaded_files = st.file_uploader(
-    "📎 Upload files (txt, pdf, docx)", 
+    "📎 Upload files (txt, pdf, docx) before asking your question", 
     type=["txt","pdf","docx"], 
     accept_multiple_files=True
 )
 
-# Display chat history
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-for role, msg in st.session_state["chat_history"]:
-    if role == "user":
-        st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Input and submit
-user_input = st.text_input("💭 Type your message:", key="user_input_key")
-submit_button = st.button("Ask")  # single click response
+# Chat input using form for first-click reliability
+with st.form("chat_form"):
+    user_input = st.text_input("💭 Type your message:", key="user_input_key")
+    submit_button = st.form_submit_button("Ask")
 
 if submit_button and user_input.strip():
     combined_input = user_input.strip()
@@ -119,3 +111,12 @@ if submit_button and user_input.strip():
     # Get AI response
     response = get_gemini_response(combined_input)
     st.session_state["chat_history"].append(("bot", response))
+
+# Display chat history
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+for role, msg in st.session_state["chat_history"]:
+    if role == "user":
+        st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
