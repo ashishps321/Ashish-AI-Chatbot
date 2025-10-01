@@ -15,8 +15,9 @@ if not API_KEY:
 # Configure Gemini
 genai.configure(api_key=API_KEY)
 
-# ✅ Correct model name
-model = genai.GenerativeModel("gemini-1.5-flash-latest")
+# ✅ Updated Model Name (use flash for faster response, pro for better reasoning)
+MODEL_NAME = "models/gemini-2.0-flash"
+model = genai.GenerativeModel(MODEL_NAME)
 
 def get_gemini_response(question: str):
     try:
