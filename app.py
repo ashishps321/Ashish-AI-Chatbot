@@ -60,7 +60,6 @@ with st.sidebar:
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
         st.session_state["chat_history"] = []
-        st.experimental_rerun()
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
@@ -99,7 +98,7 @@ with st.form("chat_form"):
     )
     submit_button = st.form_submit_button("Ask")
 
-# Handle submission
+# Handle submission safely
 if submit_button:
     combined_input = ""
 
@@ -133,6 +132,5 @@ if submit_button:
         response = get_gemini_response(combined_input)
         st.session_state["chat_history"].append(("bot", response))
 
-    # Clear input safely by rerun
-    st.session_state["current_input"] = ""
-    st.experimental_rerun()
+    # Clear input safely
+    st.session_state.current_input = ""
