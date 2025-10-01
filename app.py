@@ -25,9 +25,11 @@ def get_gemini_response(question: str):
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 
-# Initialize chat history
+# Initialize chat history and input safely
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
+if "current_input" not in st.session_state:
+    st.session_state["current_input"] = ""
 
 # Page config
 st.set_page_config(page_title="Bharat Intelligence (BI) Chatbot", page_icon="🤖", layout="wide")
@@ -84,13 +86,17 @@ for role, msg in st.session_state["chat_history"]:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# Input form (first click works)
+# Input form with clearable input
 with st.form(key="chat_form"):
-    user_input = st.text_input("💭 Type your message:", placeholder="Type your message here...")
+    user_input = st.text_input(
+        "💭 Type your message:", 
+        placeholder="Type your message here...", 
+        key="current_input"
+    )
     submit_button = st.form_submit_button("Ask")
 
-if submit_button and user_input.strip():
-    user_message = user_input.strip()
+if submit_button and st.session_state.get("current_input", "").strip():
+    user_message = st.session_state["current_input"].strip()
     
     # Add user message
     st.session_state["chat_history"].append(("user", user_message))
@@ -98,3 +104,6 @@ if submit_button and user_input.strip():
     # Get response safely
     response = get_gemini_response(user_message)
     st.session_state["chat_history"].append(("bot", response))
+    
+    # Clear input safely
+    st.session_state["current_input"] = ""
