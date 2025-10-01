@@ -2,6 +2,8 @@ import streamlit as st
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
+import speech_recognition as sr
+from io import BytesIO
 
 # Load environment variables
 load_dotenv()
@@ -86,24 +88,37 @@ for role, msg in st.session_state["chat_history"]:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# Input form with clearable input
+# Input form (text + audio)
 with st.form(key="chat_form"):
     user_input = st.text_input(
         "💭 Type your message:", 
         placeholder="Type your message here...", 
         key="current_input"
     )
+    audio_file = st.file_uploader("🎤 Or upload audio (.wav/.mp3)", type=["wav", "mp3"])
     submit_button = st.form_submit_button("Ask")
 
-if submit_button and st.session_state.get("current_input", "").strip():
-    user_message = st.session_state["current_input"].strip()
-    
-    # Add user message
-    st.session_state["chat_history"].append(("user", user_message))
-    
-    # Get response safely
-    response = get_gemini_response(user_message)
-    st.session_state["chat_history"].append(("bot", response))
-    
-    # Clear input safely
-    st.session_state["current_input"] = ""
+if submit_button:
+    # Determine if user typed or uploaded audio
+    if audio_file is not None:
+        r = sr.Recognizer()
+        with sr.AudioFile(BytesIO(audio_file.read())) as source:
+            audio = r.record(source)
+        try:
+            user_message = r.recognize_google(audio)
+            st.session_state["chat_history"].append(("user", f"[Audio] {user_message}"))
+        except Exception as e:
+            user_message = None
+            st.error(f"Audio recognition failed: {str(e)}")
+    elif st.session_state.get("current_input", "").strip():
+        user_message = st.session_state["current_input"].strip()
+        st.session_state["chat_history"].append(("user", user_message))
+    else:
+        user_message = None
+
+    # Get AI response if message exists
+    if user_message:
+        response = get_gemini_response(user_message)
+        st.session_state["chat_history"].append(("bot", response))
+        # Clear text input
+        st.session_state["current_input"] = ""
