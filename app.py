@@ -64,6 +64,7 @@ st.markdown("""
 .stTextInput {flex:1;}
 .stButton > button {background-color:#0d6efd;color:white;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;font-weight:bold;}
 .stButton > button:hover {background-color:#0b5ed7;}
+.response-container {margin-top:10px;margin-bottom:20px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -71,12 +72,12 @@ st.markdown("""
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">Your AI companion for fast, accurate, and insightful answers, powered by AI & developed by ABSingh</div>', unsafe_allow_html=True)
 
-# File upload section
-uploaded_files = st.file_uploader(
+# File uploader container (so it can be cleared after each query)
+uploader_container = st.empty()
+uploaded_files = uploader_container.file_uploader(
     "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) before asking your question", 
     type=["txt","pdf","docx","png","jpg","jpeg","bmp"], 
-    accept_multiple_files=True,
-    key="file_uploader"
+    accept_multiple_files=True
 )
 
 # Chat input using form
@@ -84,13 +85,13 @@ with st.form("chat_form"):
     user_input = st.text_input("💭 Type your message:", key="user_input_key")
     submit_button = st.form_submit_button("Ask")
 
+response_text = None  # store AI response temporarily
+
 if submit_button and user_input.strip():
     combined_input = user_input.strip()
-    
-    # Add user input to chat
     st.session_state["chat_history"].append(("user", combined_input))
-    
-    # Process uploaded files for this query only
+
+    # Process uploaded files
     if uploaded_files:
         file_texts = []
         for file in uploaded_files:
@@ -106,24 +107,22 @@ if submit_button and user_input.strip():
                 text = "\n".join([p.text for p in doc.paragraphs])
                 file_texts.append(text)
             elif file.type.startswith("image/"):
-                # Include image name in user query context
-                combined_input += f"\n[Image uploaded: {file.name}]"
                 st.session_state["chat_history"].append(("user", f"[Uploaded Image] {file.name}"))
         if file_texts:
             combined_files_text = "\n".join(file_texts)
+            st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_files_text}"))
             combined_input += "\n" + combined_files_text
-            st.session_state["chat_history"].append(("user", f"[Uploaded Files content included in query]"))
 
     # Get AI response
-    response = get_gemini_response(combined_input)
-    st.session_state["chat_history"].append(("bot", response))
-    
-    # Reset uploaded files for next query
-    st.session_state["file_uploader"] = None
+    response_text = get_gemini_response(combined_input)
+    st.session_state["chat_history"].append(("bot", response_text))
+
+    # Clear file uploader after processing
+    uploader_container.empty()
 
 # Display chat history just above input
 for role, msg in st.session_state["chat_history"]:
     if role == "user":
         st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="bot-bubble response-container">{msg}</div>', unsafe_allow_html=True)
