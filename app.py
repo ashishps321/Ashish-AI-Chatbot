@@ -1,3 +1,44 @@
+import streamlit as st
+import os
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+# File handling
+try:
+    from PyPDF2 import PdfReader
+except ImportError:
+    st.warning("PyPDF2 not installed. PDF upload won't work.")
+
+try:
+    import docx
+except ImportError:
+    st.warning("python-docx not installed. DOCX upload won't work.")
+
+# Load environment variables
+load_dotenv()
+API_KEY = st.secrets.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
+if not API_KEY:
+    st.error("Google API key not found!")
+    st.stop()
+
+# Configure Gemini
+genai.configure(api_key=API_KEY)
+MODEL_NAME = "models/gemini-2.0-flash"
+model = genai.GenerativeModel(MODEL_NAME)
+
+# Function to get AI response
+def get_gemini_response(question: str):
+    try:
+        response = model.generate_content(question)
+        return response.text
+    except Exception as e:
+        return f"⚠️ API Error: {str(e)}"
+
+# Initialize chat history
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
+
+# Page config
 st.set_page_config(page_title="Bharat Intelligence Chatbot", page_icon="🤖", layout="wide")
 
 # Sidebar (left corner content unchanged)
@@ -89,4 +130,3 @@ for role, msg in st.session_state["chat_history"]:
         st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
     else:
         st.markdown(f'<div class="bot-bubble response-container">{msg}</div>', unsafe_allow_html=True)
-
