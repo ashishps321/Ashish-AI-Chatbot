@@ -41,13 +41,22 @@ if "chat_history" not in st.session_state:
 # Page config
 st.set_page_config(page_title="Bharat Intelligence Chatbot", page_icon="🤖", layout="wide")
 
-# Sidebar
+# Sidebar (left corner content unchanged)
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712109.png", width=80)
     st.title("💬 Bharat Intelligence (BI) Chatbot")
     st.markdown("---")
     st.subheader("⚡ About")
     st.write("Welcome to **Bharat Intelligence (BI) Chatbot v1.0 – AI-powered assistant delivering instant, precise, and context-aware answers**")
+    st.subheader("✨ Key Highlights")
+    st.markdown("""
+        ✅ **Smart & Reliable** – Highly Accurate Answer  
+        💬 **Human-like Chat** – Natural and engaging conversations  
+        ⚡ **Fast & Responsive** – Quick replies  
+        🎯 **Personalized Help** – Tailored responses  
+        🔒 **Secure & Private** – Safe & confidential  
+        🌐 **Always Available** – 24/7 assistance
+    """)
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
         st.session_state["chat_history"] = []
@@ -72,10 +81,9 @@ st.markdown("""
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">Your AI companion for fast, accurate, and insightful answers, powered by AI & developed by ABSingh</div>', unsafe_allow_html=True)
 
-# File uploader container (so it can be cleared after each query)
-uploader_container = st.empty()
-uploaded_files = uploader_container.file_uploader(
-    "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) before asking your question", 
+# File uploader (always available, top of chat input)
+uploaded_files = st.file_uploader(
+    "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) at any time", 
     type=["txt","pdf","docx","png","jpg","jpeg","bmp"], 
     accept_multiple_files=True
 )
@@ -85,13 +93,12 @@ with st.form("chat_form"):
     user_input = st.text_input("💭 Type your message:", key="user_input_key")
     submit_button = st.form_submit_button("Ask")
 
-response_text = None  # store AI response temporarily
-
+# Process input and files
 if submit_button and user_input.strip():
     combined_input = user_input.strip()
     st.session_state["chat_history"].append(("user", combined_input))
 
-    # Process uploaded files
+    # Process uploaded files (any time)
     if uploaded_files:
         file_texts = []
         for file in uploaded_files:
@@ -116,9 +123,6 @@ if submit_button and user_input.strip():
     # Get AI response
     response_text = get_gemini_response(combined_input)
     st.session_state["chat_history"].append(("bot", response_text))
-
-    # Clear file uploader after processing
-    uploader_container.empty()
 
 # Display chat history just above input
 for role, msg in st.session_state["chat_history"]:
