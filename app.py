@@ -3,10 +3,10 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# Load .env
+# Load environment variables
 load_dotenv()
 
-# API Key
+# Get API Key
 API_KEY = st.secrets.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
     st.error("Google API key not found. Add it to Streamlit Secrets or .env")
@@ -17,6 +17,7 @@ genai.configure(api_key=API_KEY)
 MODEL_NAME = "models/gemini-2.0-flash"
 model = genai.GenerativeModel(MODEL_NAME)
 
+# Function to get response
 def get_gemini_response(question: str):
     try:
         response = model.generate_content(question)
@@ -25,8 +26,10 @@ def get_gemini_response(question: str):
         return f"⚠️ API Error: {str(e)}"
 
 # Initialize session state
-st.session_state.setdefault("chat_history", [])
-st.session_state.setdefault("current_input", "")
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+if "current_input" not in st.session_state:
+    st.session_state.current_input = ""
 
 # Page config
 st.set_page_config(page_title="Bharat Intelligence (BI) Chatbot", page_icon="🤖", layout="wide")
@@ -50,7 +53,6 @@ with st.sidebar:
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
         st.session_state.chat_history = []
-        st.experimental_rerun()
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
@@ -84,7 +86,7 @@ for role, msg in st.session_state.chat_history:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# Input + submit button
+# Input box + submit button
 user_input = st.text_input("💭 Type your message:", placeholder="Send a message:", key="current_input")
 
 if st.button("Ask") and st.session_state.current_input.strip():
@@ -93,12 +95,9 @@ if st.button("Ask") and st.session_state.current_input.strip():
     # Add user message
     st.session_state.chat_history.append(("user", user_message))
     
-    # Get response from Gemini
+    # Get response safely
     response = get_gemini_response(user_message)
     st.session_state.chat_history.append(("bot", response))
     
-    # Clear input
+    # Clear input for next query
     st.session_state.current_input = ""
-    
-    # Force rerun so first click shows response immediately
-    st.experimental_rerun()
