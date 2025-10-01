@@ -7,7 +7,6 @@ import docx
 from PIL import Image
 import requests
 from io import BytesIO
-import base64
 
 # Load environment variables
 load_dotenv()
@@ -18,40 +17,46 @@ if not API_KEY:
     st.error("Google API key not found!")
     st.stop()
 if not HF_API_KEY:
-    st.warning("Hugging Face API key not found! Image generation will not work.")
+    st.warning("HuggingFace API key not found. Image generation will not work.")
 
 # Configure Gemini
 genai.configure(api_key=API_KEY)
 MODEL_NAME = "models/gemini-2.0-flash"
 model = genai.GenerativeModel(MODEL_NAME)
 
-# Gemini response function
-def get_gemini_response(prompt: str):
+# List of unsafe words for image generation
+UNSAFE_WORDS = ["child", "minor", "nsfw", "sex", "abuse", "exploit"]
+
+# Function to check prompt safety
+def is_prompt_safe(prompt: str):
+    lower_prompt = prompt.lower()
+    for word in UNSAFE_WORDS:
+        if word in lower_prompt:
+            return False
+    return True
+
+# Function to get AI response
+def get_gemini_response(question: str):
     try:
-        resp = model.generate_content(prompt)
-        return resp.text
+        response = model.generate_content(question)
+        return response.text
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 
-# Stable Diffusion image generation function
+# Function to generate image from text prompt using Stable Diffusion
 def generate_image(prompt: str):
     if not HF_API_KEY:
-        return None
-    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1"
+        return None, "HuggingFace API key missing."
+    if not is_prompt_safe(prompt):
+        return None, "⚠️ Prompt not allowed due to safety restrictions."
+    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
     headers = {"Authorization": f"Bearer {HF_API_KEY}"}
-    payload = {"inputs": prompt}
-    response = requests.post(API_URL, headers=headers, json=payload)
+    response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
     if response.status_code == 200:
-        try:
-            img = Image.open(BytesIO(response.content))
-            return img
-        except:
-            data = response.json()
-            if isinstance(data, dict) and "generated_image" in data:
-                image_bytes = base64.b64decode(data["generated_image"])
-                img = Image.open(BytesIO(image_bytes))
-                return img
-    return None
+        image = Image.open(BytesIO(response.content))
+        return image, None
+    else:
+        return None, f"⚠️ Failed to generate image. Status code: {response.status_code}"
 
 # Initialize chat history
 if "chat_history" not in st.session_state:
@@ -60,7 +65,7 @@ if "chat_history" not in st.session_state:
 # Page config
 st.set_page_config(page_title="Bharat Intelligence Chatbot", page_icon="🤖", layout="wide")
 
-# Sidebar
+# Sidebar (kept intact)
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712109.png", width=80)
     st.title("💬 Bharat Intelligence (BI) Chatbot")
@@ -73,7 +78,7 @@ with st.sidebar:
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
-# Custom CSS
+# Custom CSS (kept intact)
 st.markdown("""
 <style>
 .user-bubble {background-color:#0d6efd;color:white;padding:12px;border-radius:18px;max-width:70%;margin-left:auto;margin-bottom:8px;word-wrap:break-word;}
@@ -92,12 +97,12 @@ st.markdown('<div class="tagline">Your AI companion for fast, accurate, and insi
 
 # File upload section
 uploaded_files = st.file_uploader(
-    "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) before asking your question", 
+    "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp)", 
     type=["txt","pdf","docx","png","jpg","jpeg","bmp"], 
     accept_multiple_files=True
 )
 
-# Chat input using form
+# Chat input form
 with st.form("chat_form"):
     user_input = st.text_input("💭 Type your message:", key="user_input_key")
     generate_img = st.checkbox("Generate Image from prompt")
@@ -131,18 +136,18 @@ if submit_button and user_input.strip():
 
     # Image generation
     if generate_img:
-        img = generate_image(combined_input)
+        img, error = generate_image(combined_input)
         if img:
             st.session_state["chat_history"].append(("bot", f"[Generated Image for prompt: {combined_input}]"))
             st.image(img, caption=combined_input)
         else:
-            st.session_state["chat_history"].append(("bot", "⚠️ Failed to generate image."))
+            st.session_state["chat_history"].append(("bot", error))
+    else:
+        # Gemini text response
+        response = get_gemini_response(combined_input)
+        st.session_state["chat_history"].append(("bot", response))
 
-    # Text response from Gemini
-    response = get_gemini_response(combined_input)
-    st.session_state["chat_history"].append(("bot", response))
-
-# Display chat history **just above input**
+# Display chat history just above input
 for role, msg in st.session_state["chat_history"]:
     if role == "user":
         st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
