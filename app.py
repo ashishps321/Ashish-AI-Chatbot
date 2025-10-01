@@ -14,7 +14,9 @@ if not API_KEY:
 
 # Configure Gemini
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+
+# ✅ Correct model name
+model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
 def get_gemini_response(question: str):
     try:
@@ -41,7 +43,7 @@ with st.sidebar:
     st.write("Welcome to **Bharat Intelligence (BI) Chatbot v1.0 – An AI-powered assistant delivering instant, precise, and context-aware answers")
     st.subheader("✨ Key Highlights")
     st.markdown("""
-        ✅ **Smart & Reliable** – Higly Accurate Answer  
+        ✅ **Smart & Reliable** – Highly Accurate Answer  
         💬 **Human-like Chat** – Natural and engaging conversations  
         ⚡ **Fast & Responsive** – Quick replies  
         🎯 **Personalized Help** – Tailored responses  
@@ -96,6 +98,3 @@ with st.form(key="chat_form"):
         response = get_gemini_response(user_message)
         st.session_state.chat_history.append(("bot", response))
         st.session_state.current_input = ""  # Clear input after submit
-
-
-
