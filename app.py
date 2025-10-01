@@ -2,21 +2,17 @@ import streamlit as st
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
-
-# File handling
-try:
-    from PyPDF2 import PdfReader
-except ImportError:
-    st.warning("PyPDF2 not installed. PDF upload won't work.")
-
-try:
-    import docx
-except ImportError:
-    st.warning("python-docx not installed. DOCX upload won't work.")
+from PyPDF2 import PdfReader
+import docx
+from PIL import Image
+import requests
+from io import BytesIO
 
 # Load environment variables
 load_dotenv()
 API_KEY = st.secrets.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
+HF_API_KEY = st.secrets.get("HUGGINGFACE_API_KEY") or os.getenv("HUGGINGFACE_API_KEY")  # For image generation
+
 if not API_KEY:
     st.error("Google API key not found!")
     st.stop()
@@ -34,6 +30,17 @@ def get_gemini_response(question: str):
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 
+# Function to generate image from text prompt
+def generate_image(prompt: str):
+    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
+    if response.status_code == 200:
+        image = Image.open(BytesIO(response.content))
+        return image
+    else:
+        return None
+
 # Initialize chat history
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
@@ -41,22 +48,13 @@ if "chat_history" not in st.session_state:
 # Page config
 st.set_page_config(page_title="Bharat Intelligence Chatbot", page_icon="🤖", layout="wide")
 
-# Sidebar (left corner content unchanged)
+# Sidebar
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712109.png", width=80)
     st.title("💬 Bharat Intelligence (BI) Chatbot")
     st.markdown("---")
     st.subheader("⚡ About")
     st.write("Welcome to **Bharat Intelligence (BI) Chatbot v1.0 – AI-powered assistant delivering instant, precise, and context-aware answers**")
-    st.subheader("✨ Key Highlights")
-    st.markdown("""
-        ✅ **Smart & Reliable** – Highly Accurate Answer  
-        💬 **Human-like Chat** – Natural and engaging conversations  
-        ⚡ **Fast & Responsive** – Quick replies  
-        🎯 **Personalized Help** – Tailored responses  
-        🔒 **Secure & Private** – Safe & confidential  
-        🌐 **Always Available** – 24/7 assistance
-    """)
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
         st.session_state["chat_history"] = []
@@ -73,7 +71,6 @@ st.markdown("""
 .stTextInput {flex:1;}
 .stButton > button {background-color:#0d6efd;color:white;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;font-weight:bold;}
 .stButton > button:hover {background-color:#0b5ed7;}
-.response-container {margin-top:10px;margin-bottom:20px;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -81,9 +78,9 @@ st.markdown("""
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">Your AI companion for fast, accurate, and insightful answers, powered by AI & developed by ABSingh</div>', unsafe_allow_html=True)
 
-# File uploader (always available, top of chat input)
+# File upload section (top)
 uploaded_files = st.file_uploader(
-    "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) at any time", 
+    "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) before asking your question", 
     type=["txt","pdf","docx","png","jpg","jpeg","bmp"], 
     accept_multiple_files=True
 )
@@ -91,14 +88,14 @@ uploaded_files = st.file_uploader(
 # Chat input using form
 with st.form("chat_form"):
     user_input = st.text_input("💭 Type your message:", key="user_input_key")
+    generate_img = st.checkbox("Generate Image from prompt")
     submit_button = st.form_submit_button("Ask")
 
-# Process input and files
 if submit_button and user_input.strip():
     combined_input = user_input.strip()
     st.session_state["chat_history"].append(("user", combined_input))
 
-    # Process uploaded files (any time)
+    # Process uploaded files
     if uploaded_files:
         file_texts = []
         for file in uploaded_files:
@@ -120,13 +117,22 @@ if submit_button and user_input.strip():
             st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_files_text}"))
             combined_input += "\n" + combined_files_text
 
-    # Get AI response
-    response_text = get_gemini_response(combined_input)
-    st.session_state["chat_history"].append(("bot", response_text))
+    # If image generation checked
+    if generate_img:
+        img = generate_image(combined_input)
+        if img:
+            st.session_state["chat_history"].append(("bot", f"[Generated Image for prompt: {combined_input}]"))
+            st.image(img, caption=combined_input)
+        else:
+            st.session_state["chat_history"].append(("bot", "⚠️ Failed to generate image."))
+    else:
+        # Get AI text response
+        response = get_gemini_response(combined_input)
+        st.session_state["chat_history"].append(("bot", response))
 
 # Display chat history just above input
 for role, msg in st.session_state["chat_history"]:
     if role == "user":
         st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
     else:
-        st.markdown(f'<div class="bot-bubble response-container">{msg}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
