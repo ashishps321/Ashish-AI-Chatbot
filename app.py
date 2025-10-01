@@ -2,8 +2,11 @@ import streamlit as st
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
-import speech_recognition as sr
 from io import BytesIO
+from pydub import AudioSegment
+import base64
+import tempfile
+import speech_recognition as sr
 
 # Load environment variables
 load_dotenv()
@@ -88,7 +91,7 @@ for role, msg in st.session_state["chat_history"]:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# Input form (text + audio)
+# Input form (text + audio upload)
 with st.form(key="chat_form"):
     user_input = st.text_input(
         "💭 Type your message:", 
@@ -99,22 +102,28 @@ with st.form(key="chat_form"):
     submit_button = st.form_submit_button("Ask")
 
 if submit_button:
-    # Determine if user typed or uploaded audio
+    user_message = None
+    # If audio file uploaded
     if audio_file is not None:
         r = sr.Recognizer()
-        with sr.AudioFile(BytesIO(audio_file.read())) as source:
-            audio = r.record(source)
-        try:
-            user_message = r.recognize_google(audio)
-            st.session_state["chat_history"].append(("user", f"[Audio] {user_message}"))
-        except Exception as e:
-            user_message = None
-            st.error(f"Audio recognition failed: {str(e)}")
+        # Convert mp3 to wav if needed
+        with tempfile.NamedTemporaryFile(suffix=".wav") as temp_wav_file:
+            if audio_file.type == "audio/mpeg":
+                audio_segment = AudioSegment.from_file(BytesIO(audio_file.read()), format="mp3")
+                audio_segment.export(temp_wav_file.name, format="wav")
+            else:
+                temp_wav_file.write(audio_file.read())
+                temp_wav_file.flush()
+            with sr.AudioFile(temp_wav_file.name) as source:
+                audio_data = r.record(source)
+                try:
+                    user_message = r.recognize_google(audio_data)
+                    st.session_state["chat_history"].append(("user", f"[Audio] {user_message}"))
+                except Exception as e:
+                    st.error(f"Audio recognition failed: {str(e)}")
     elif st.session_state.get("current_input", "").strip():
         user_message = st.session_state["current_input"].strip()
         st.session_state["chat_history"].append(("user", user_message))
-    else:
-        user_message = None
 
     # Get AI response if message exists
     if user_message:
