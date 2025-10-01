@@ -90,7 +90,8 @@ for role, msg in st.session_state["chat_history"]:
 
 # Input form
 with st.form("chat_form"):
-    user_input = st.text_input("💭 Type your message:", key="current_input")
+    # Text input with unique key
+    user_input = st.text_input("💭 Type your message:", key="user_input_key")
     uploaded_files = st.file_uploader(
         "📎 Upload files (txt, pdf, docx)",
         type=["txt","pdf","docx"],
@@ -98,7 +99,6 @@ with st.form("chat_form"):
     )
     submit_button = st.form_submit_button("Ask")
 
-# Handle submission safely
 if submit_button:
     combined_input = ""
 
@@ -122,7 +122,6 @@ if submit_button:
                 doc = docx.Document(file)
                 text = "\n".join([p.text for p in doc.paragraphs])
                 file_texts.append(text)
-
         combined_text = "\n".join(file_texts)
         st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_text}"))
         combined_input += "\n" + combined_text if combined_input else combined_text
@@ -132,5 +131,4 @@ if submit_button:
         response = get_gemini_response(combined_input)
         st.session_state["chat_history"].append(("bot", response))
 
-    # Clear input safely
-    st.session_state.current_input = ""
+    # **Do NOT reset session_state here** – Streamlit will automatically rerun next time input changes
