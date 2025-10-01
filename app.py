@@ -75,7 +75,8 @@ st.markdown('<div class="tagline">Your AI companion for fast, accurate, and insi
 uploaded_files = st.file_uploader(
     "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) before asking your question", 
     type=["txt","pdf","docx","png","jpg","jpeg","bmp"], 
-    accept_multiple_files=True
+    accept_multiple_files=True,
+    key="file_uploader"
 )
 
 # Chat input using form
@@ -85,9 +86,11 @@ with st.form("chat_form"):
 
 if submit_button and user_input.strip():
     combined_input = user_input.strip()
+    
+    # Add user input to chat
     st.session_state["chat_history"].append(("user", combined_input))
-
-    # Process uploaded files
+    
+    # Process uploaded files for this query only
     if uploaded_files:
         file_texts = []
         for file in uploaded_files:
@@ -103,17 +106,22 @@ if submit_button and user_input.strip():
                 text = "\n".join([p.text for p in doc.paragraphs])
                 file_texts.append(text)
             elif file.type.startswith("image/"):
+                # Include image name in user query context
+                combined_input += f"\n[Image uploaded: {file.name}]"
                 st.session_state["chat_history"].append(("user", f"[Uploaded Image] {file.name}"))
         if file_texts:
             combined_files_text = "\n".join(file_texts)
-            st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_files_text}"))
             combined_input += "\n" + combined_files_text
+            st.session_state["chat_history"].append(("user", f"[Uploaded Files content included in query]"))
 
     # Get AI response
     response = get_gemini_response(combined_input)
     st.session_state["chat_history"].append(("bot", response))
+    
+    # Reset uploaded files for next query
+    st.session_state["file_uploader"] = None
 
-# Display chat history **just above input**
+# Display chat history just above input
 for role, msg in st.session_state["chat_history"]:
     if role == "user":
         st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
