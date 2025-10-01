@@ -48,15 +48,6 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("⚡ About")
     st.write("Welcome to **Bharat Intelligence (BI) Chatbot v1.0 – AI-powered assistant delivering instant, precise, and context-aware answers**")
-    st.subheader("✨ Key Highlights")
-    st.markdown("""
-        ✅ **Smart & Reliable** – Highly Accurate Answer  
-        💬 **Human-like Chat** – Natural and engaging conversations  
-        ⚡ **Fast & Responsive** – Quick replies  
-        🎯 **Personalized Help** – Tailored responses  
-        🔒 **Secure & Private** – Safe & confidential  
-        🌐 **Always Available** – 24/7 assistance
-    """)
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
         st.session_state["chat_history"] = []
@@ -70,44 +61,42 @@ st.markdown("""
 .user-bubble {background-color:#0d6efd;color:white;padding:12px;border-radius:18px;max-width:70%;margin-left:auto;margin-bottom:8px;word-wrap:break-word;}
 .bot-bubble {background-color:#e9ecef;color:#212529;padding:12px;border-radius:18px;max-width:70%;margin-right:auto;margin-bottom:8px;word-wrap:break-word;}
 .title {text-align:center;font-size:32px;font-weight:bold;color:#0d47a1;margin-bottom:4px;}
-.tagline {text-align:center;font-size:14px;color:#6c757d;margin-bottom:25px;}
+.tagline {text-align:center;font-size:14px;color:#6c757d;margin-bottom:15px;}
 .stTextInput {flex:1;}
 .stButton > button {background-color:#0d6efd;color:white;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;font-weight:bold;}
 .stButton > button:hover {background-color:#0b5ed7;}
 </style>
 """, unsafe_allow_html=True)
 
-# Main chat area
+# Title and tagline
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
-st.markdown('<div class="tagline">“Your AI companion for fast, accurate, and insightful answers, powered by AI & developed by ABSingh”</div>', unsafe_allow_html=True)
+st.markdown('<div class="tagline">Your AI companion for fast, accurate, and insightful answers, powered by AI & developed by ABSingh</div>', unsafe_allow_html=True)
+
+# File upload (just below description)
+uploaded_files = st.file_uploader(
+    "📎 Upload files (txt, pdf, docx)", 
+    type=["txt","pdf","docx"], 
+    accept_multiple_files=True
+)
 
 # Display chat history
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 for role, msg in st.session_state["chat_history"]:
     if role == "user":
         st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
     else:
         st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
-# Input form
-with st.form("chat_form"):
-    # Text input with unique key
-    user_input = st.text_input("💭 Type your message:", key="user_input_key")
-    uploaded_files = st.file_uploader(
-        "📎 Upload files (txt, pdf, docx)",
-        type=["txt","pdf","docx"],
-        accept_multiple_files=True
-    )
-    submit_button = st.form_submit_button("Ask")
+# Input and submit
+user_input = st.text_input("💭 Type your message:", key="user_input_key")
+submit_button = st.button("Ask")  # single click response
 
-if submit_button:
-    combined_input = ""
+if submit_button and user_input.strip():
+    combined_input = user_input.strip()
+    st.session_state["chat_history"].append(("user", combined_input))
 
-    # Add text input
-    if user_input.strip():
-        combined_input += user_input.strip()
-        st.session_state["chat_history"].append(("user", user_input.strip()))
-
-    # Add uploaded files
+    # Process uploaded files
     if uploaded_files:
         file_texts = []
         for file in uploaded_files:
@@ -122,13 +111,11 @@ if submit_button:
                 doc = docx.Document(file)
                 text = "\n".join([p.text for p in doc.paragraphs])
                 file_texts.append(text)
-        combined_text = "\n".join(file_texts)
-        st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_text}"))
-        combined_input += "\n" + combined_text if combined_input else combined_text
+        if file_texts:
+            combined_files_text = "\n".join(file_texts)
+            st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_files_text}"))
+            combined_input += "\n" + combined_files_text
 
     # Get AI response
-    if combined_input:
-        response = get_gemini_response(combined_input)
-        st.session_state["chat_history"].append(("bot", response))
-
-    # **Do NOT reset session_state here** – Streamlit will automatically rerun next time input changes
+    response = get_gemini_response(combined_input)
+    st.session_state["chat_history"].append(("bot", response))
