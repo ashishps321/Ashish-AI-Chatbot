@@ -25,11 +25,11 @@ def get_gemini_response(question: str):
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 
-# Initialize session state
+# Initialize session state safely
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+    st.session_state["chat_history"] = []
 if "current_input" not in st.session_state:
-    st.session_state.current_input = ""
+    st.session_state["current_input"] = ""
 
 # Page config
 st.set_page_config(page_title="Bharat Intelligence (BI) Chatbot", page_icon="🤖", layout="wide")
@@ -52,7 +52,7 @@ with st.sidebar:
     """)
     st.subheader("🛠 Options")
     if st.button("🧹 Clear Chat"):
-        st.session_state.chat_history = []
+        st.session_state["chat_history"] = []
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
@@ -80,7 +80,7 @@ st.markdown('<div class="tagline">“Your AI companion for fast, accurate, and i
 st.markdown('<div class="chat-container">', unsafe_allow_html=True)
 
 # Display chat history
-for role, msg in st.session_state.chat_history:
+for role, msg in st.session_state["chat_history"]:
     if role == "user":
         st.markdown(f'<div class="msg-row user"><div class="user-msg">{msg}</div></div>', unsafe_allow_html=True)
     else:
@@ -89,15 +89,15 @@ for role, msg in st.session_state.chat_history:
 # Input box + submit button
 user_input = st.text_input("💭 Type your message:", placeholder="Send a message:", key="current_input")
 
-if st.button("Ask") and st.session_state.current_input.strip():
-    user_message = st.session_state.current_input.strip()
+if st.button("Ask") and st.session_state.get("current_input", "").strip():
+    user_message = st.session_state["current_input"].strip()
     
     # Add user message
-    st.session_state.chat_history.append(("user", user_message))
+    st.session_state["chat_history"].append(("user", user_message))
     
     # Get response safely
     response = get_gemini_response(user_message)
-    st.session_state.chat_history.append(("bot", response))
+    st.session_state["chat_history"].append(("bot", response))
     
-    # Clear input for next query
-    st.session_state.current_input = ""
+    # Clear input for next query safely
+    st.session_state["current_input"] = ""
