@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import time
 import google.generativeai as genai
 from dotenv import load_dotenv
 from io import BytesIO
@@ -143,3 +144,4 @@ if submit_button:
                 st.session_state["chat_history"].append(("bot", bot_msg))
             time.sleep(0.05)  # typing animation
         st.session_state["current_input"] = ""
+
