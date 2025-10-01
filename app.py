@@ -14,8 +14,6 @@ if not API_KEY:
 
 # Configure Gemini
 genai.configure(api_key=API_KEY)
-
-# ✅ Updated Model Name (use flash for faster response, pro for better reasoning)
 MODEL_NAME = "models/gemini-2.0-flash"
 model = genai.GenerativeModel(MODEL_NAME)
 
@@ -26,7 +24,7 @@ def get_gemini_response(question: str):
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 
-# Session state
+# Initialize session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "current_input" not in st.session_state:
@@ -69,7 +67,6 @@ st.markdown("""
 .bot-msg {background-color:#e9ecef;color:#212529;border-bottom-left-radius:5px;}
 .title {text-align:center;font-size:32px;font-weight:bold;color:#0d47a1;margin-bottom:4px;}
 .tagline {text-align:center;font-size:14px;color:#6c757d;margin-bottom:25px;}
-.input-container {position:fixed;bottom:15px;width:80%;left:50%;transform:translateX(-50%);background:white;padding:10px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;gap:10px;z-index:999;}
 .stTextInput {flex:1;}
 .stButton > button {background-color:#0d6efd;color:white;padding:0.6rem 1rem;border-radius:8px;border:none;cursor:pointer;font-weight:bold;}
 .stButton > button:hover {background-color:#0b5ed7;}
@@ -88,14 +85,16 @@ for role, msg in st.session_state.chat_history:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# Input form
-with st.form(key="chat_form"):
-    st.session_state.current_input = st.text_input("💭 Type your message:", placeholder="Send a message...", value=st.session_state.current_input)
-    submit_button = st.form_submit_button("Ask")
+# Input + submit button (without form)
+user_input = st.text_input("💭 Type your message:", placeholder="Send a message...", value=st.session_state.current_input)
 
-    if submit_button and st.session_state.current_input.strip():
-        user_message = st.session_state.current_input.strip()
-        st.session_state.chat_history.append(("user", user_message))
-        response = get_gemini_response(user_message)
-        st.session_state.chat_history.append(("bot", response))
-        st.session_state.current_input = ""  # Clear input after submit
+if st.button("Ask") and user_input.strip():
+    # Append user message
+    st.session_state.chat_history.append(("user", user_input.strip()))
+    
+    # Get response from Gemini
+    response = get_gemini_response(user_input.strip())
+    st.session_state.chat_history.append(("bot", response))
+    
+    # Clear input
+    st.session_state.current_input = ""
