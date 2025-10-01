@@ -84,10 +84,12 @@ for role, msg in st.session_state["chat_history"]:
     else:
         st.markdown(f'<div class="msg-row bot"><div class="bot-msg">{msg}</div></div>', unsafe_allow_html=True)
 
-# Input + submit button (no session_state clearing)
-user_input = st.text_input("💭 Type your message:", placeholder="Type your message here...")
+# Input form (first click works)
+with st.form(key="chat_form"):
+    user_input = st.text_input("💭 Type your message:", placeholder="Type your message here...")
+    submit_button = st.form_submit_button("Ask")
 
-if st.button("Ask") and user_input.strip():
+if submit_button and user_input.strip():
     user_message = user_input.strip()
     
     # Add user message
