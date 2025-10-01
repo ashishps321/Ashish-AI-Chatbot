@@ -49,7 +49,7 @@ def generate_image(prompt: str):
         return None, "HuggingFace API key missing."
     if not is_prompt_safe(prompt):
         return None, "⚠️ Prompt not allowed due to safety restrictions."
-    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
+    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-v1-5"
     headers = {"Authorization": f"Bearer {HF_API_KEY}"}
     response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
     if response.status_code == 200:
@@ -153,3 +153,4 @@ for role, msg in st.session_state["chat_history"]:
         st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
     else:
         st.markdown(f'<div class="bot-bubble">{msg}</div>', unsafe_allow_html=True)
+
