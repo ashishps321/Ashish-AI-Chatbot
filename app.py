@@ -7,8 +7,9 @@ import docx
 from PIL import Image
 import requests
 from io import BytesIO
+import base64
 
-# ------------------- Load environment -------------------
+# Load environment variables
 load_dotenv()
 API_KEY = st.secrets.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
 HF_API_KEY = st.secrets.get("HUGGINGFACE_API_KEY") or os.getenv("HUGGINGFACE_API_KEY")
@@ -16,45 +17,50 @@ HF_API_KEY = st.secrets.get("HUGGINGFACE_API_KEY") or os.getenv("HUGGINGFACE_API
 if not API_KEY:
     st.error("Google API key not found!")
     st.stop()
-
 if not HF_API_KEY:
-    st.warning("Hugging Face API key not found. Image generation won't work.")
+    st.warning("Hugging Face API key not found! Image generation will not work.")
 
-# ------------------- Configure Gemini -------------------
+# Configure Gemini
 genai.configure(api_key=API_KEY)
 MODEL_NAME = "models/gemini-2.0-flash"
 model = genai.GenerativeModel(MODEL_NAME)
 
-# ------------------- Functions -------------------
-def get_gemini_response(question: str):
+# Gemini response function
+def get_gemini_response(prompt: str):
     try:
-        response = model.generate_content(question)
-        return response.text
+        resp = model.generate_content(prompt)
+        return resp.text
     except Exception as e:
         return f"⚠️ API Error: {str(e)}"
 
+# Stable Diffusion image generation function
 def generate_image(prompt: str):
     if not HF_API_KEY:
         return None
-    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2"
+    API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1"
     headers = {"Authorization": f"Bearer {HF_API_KEY}"}
-    try:
-        response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
-        if response.status_code == 200:
-            return Image.open(BytesIO(response.content))
-        else:
-            return None
-    except:
-        return None
+    payload = {"inputs": prompt}
+    response = requests.post(API_URL, headers=headers, json=payload)
+    if response.status_code == 200:
+        try:
+            img = Image.open(BytesIO(response.content))
+            return img
+        except:
+            data = response.json()
+            if isinstance(data, dict) and "generated_image" in data:
+                image_bytes = base64.b64decode(data["generated_image"])
+                img = Image.open(BytesIO(image_bytes))
+                return img
+    return None
 
-# ------------------- Initialize session -------------------
+# Initialize chat history
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
 
-# ------------------- Page Config -------------------
+# Page config
 st.set_page_config(page_title="Bharat Intelligence Chatbot", page_icon="🤖", layout="wide")
 
-# ------------------- Sidebar -------------------
+# Sidebar
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/4712/4712109.png", width=80)
     st.title("💬 Bharat Intelligence (BI) Chatbot")
@@ -67,7 +73,7 @@ with st.sidebar:
     st.markdown("---")
     st.caption("🚀 Developed by Ashish")
 
-# ------------------- CSS -------------------
+# Custom CSS
 st.markdown("""
 <style>
 .user-bubble {background-color:#0d6efd;color:white;padding:12px;border-radius:18px;max-width:70%;margin-left:auto;margin-bottom:8px;word-wrap:break-word;}
@@ -80,24 +86,23 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ------------------- Title & Description -------------------
+# Title & description
 st.markdown('<div class="title">🤖 Bharat Intelligence (BI) Chatbot</div>', unsafe_allow_html=True)
 st.markdown('<div class="tagline">Your AI companion for fast, accurate, and insightful answers, powered by AI & developed by ABSingh</div>', unsafe_allow_html=True)
 
-# ------------------- File Upload Section -------------------
+# File upload section
 uploaded_files = st.file_uploader(
-    "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) anytime",
-    type=["txt","pdf","docx","png","jpg","jpeg","bmp"],
+    "📎 Upload files (txt, pdf, docx, png, jpg, jpeg, bmp) before asking your question", 
+    type=["txt","pdf","docx","png","jpg","jpeg","bmp"], 
     accept_multiple_files=True
 )
 
-# ------------------- Chat Input -------------------
+# Chat input using form
 with st.form("chat_form"):
     user_input = st.text_input("💭 Type your message:", key="user_input_key")
     generate_img = st.checkbox("Generate Image from prompt")
     submit_button = st.form_submit_button("Ask")
 
-# ------------------- Handle Submission -------------------
 if submit_button and user_input.strip():
     combined_input = user_input.strip()
     st.session_state["chat_history"].append(("user", combined_input))
@@ -119,13 +124,12 @@ if submit_button and user_input.strip():
                 file_texts.append(text)
             elif file.type.startswith("image/"):
                 st.session_state["chat_history"].append(("user", f"[Uploaded Image] {file.name}"))
-
         if file_texts:
             combined_files_text = "\n".join(file_texts)
             st.session_state["chat_history"].append(("user", f"[Uploaded Files] {combined_files_text}"))
             combined_input += "\n" + combined_files_text
 
-    # Generate Image if checked
+    # Image generation
     if generate_img:
         img = generate_image(combined_input)
         if img:
@@ -133,12 +137,12 @@ if submit_button and user_input.strip():
             st.image(img, caption=combined_input)
         else:
             st.session_state["chat_history"].append(("bot", "⚠️ Failed to generate image."))
-    else:
-        # Get text response
-        response = get_gemini_response(combined_input)
-        st.session_state["chat_history"].append(("bot", response))
 
-# ------------------- Display chat history just above input -------------------
+    # Text response from Gemini
+    response = get_gemini_response(combined_input)
+    st.session_state["chat_history"].append(("bot", response))
+
+# Display chat history **just above input**
 for role, msg in st.session_state["chat_history"]:
     if role == "user":
         st.markdown(f'<div class="user-bubble">{msg}</div>', unsafe_allow_html=True)
